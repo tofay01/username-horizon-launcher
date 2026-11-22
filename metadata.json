@@ -1,0 +1,6 @@
+{
+  "name": "Horizon Launcher",
+  "description": "Customizable Android & TV Launcher with gesture shortcuts, Wallpaper Studio, geolocalized GPS weather, and Adhan prayer alerts with custom device audio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
