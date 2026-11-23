@@ -867,6 +867,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             GestureAction.OPEN_SETTINGS -> navigateTo(LauncherDestination.SETTINGS_MENU)
             GestureAction.OPEN_WEATHER -> navigateTo(LauncherDestination.WEATHER_DETAIL)
             GestureAction.OPEN_PRAYER -> navigateTo(LauncherDestination.PRAYER_AND_ADHAN)
+            GestureAction.OPEN_CALENDAR -> navigateTo(LauncherDestination.CALENDAR_DETAIL)
             GestureAction.OPEN_WALLPAPER_STUDIO -> navigateTo(LauncherDestination.WALLPAPER_STUDIO)
             GestureAction.OPEN_UI_CUSTOMIZER -> navigateTo(LauncherDestination.UI_CUSTOMIZER)
             GestureAction.TOGGLE_ADHAN_AUDIO -> testOrStopAdhan()

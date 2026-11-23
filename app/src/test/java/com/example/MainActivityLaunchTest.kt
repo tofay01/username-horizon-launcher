@@ -1836,6 +1836,7 @@ class HomeScreenTilesTest {
 
     @Test
     fun githubAutoUpdater_parsesRepoSlugComparesVersions_andRendersUpdateDialogs() {
+        assertEquals("tofay01/username-horizon-launcher", LauncherSettings().githubUpdateRepo)
         assertEquals("karim/horizon-tv", com.example.update.GitHubUpdateRepository.normalizeRepoSlug("karim/horizon-tv"))
         assertEquals(
             "karim/horizon-tv",
@@ -1908,6 +1909,111 @@ class HomeScreenTilesTest {
         composeRule.onNodeWithTag("github_update_dialog").assertIsDisplayed()
         composeRule.onNodeWithTag("github_update_download_btn").assertIsDisplayed().performClick()
         assertTrue("Expected download & install CTA callback", downloadTriggered)
+    }
+
+    @Test
+    fun calendarWidget_replacesPrayerCardInSameSlot_andSwitchesCleanly() {
+        val showCalendarOnly = androidx.compose.runtime.mutableStateOf(true)
+        val showPrayerAlso = androidx.compose.runtime.mutableStateOf(false)
+        var navigatedToCalendar = false
+
+        composeRule.setContent {
+            HorizonLauncherTheme {
+                HomeScreen(
+                    state = LauncherUiState(
+                        settings = LauncherSettings(
+                            language = LauncherLanguage.FR,
+                            showPrayerWidget = showPrayerAlso.value,
+                            showCalendarWidget = showCalendarOnly.value,
+                            showWeatherWidget = true,
+                        )
+                    ),
+                    isHomeActive = true,
+                    onNavigate = { dest ->
+                        if (dest == com.example.model.LauncherDestination.CALENDAR_DETAIL) {
+                            navigatedToCalendar = true
+                        }
+                    },
+                    onLaunchApp = {},
+                    onOpenContextApp = {},
+                    onToggleFavorite = {},
+                    onMoveFavorite = { _, _ -> },
+                    onHideApp = {},
+                    onOpenAppInfo = {},
+                    onOpenNetworkSettings = {},
+                    onExecuteGesture = {},
+                    onSelectHdmiSource = {},
+                    onStopAdhan = {},
+                )
+            }
+        }
+
+        val calBounds = composeRule.onNodeWithTag("home_calendar_card").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+        val weatherBounds = composeRule.onNodeWithTag("home_weather_card").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+        assertTrue(
+            "Expected Calendar card (${calBounds.top}) aligned symmetrically with Weather card (${weatherBounds.top})",
+            abs(calBounds.top - weatherBounds.top) < 4f,
+        )
+        composeRule.onNodeWithTag("home_calendar_hero_day", useUnmergedTree = true).assertExists()
+        composeRule.onNodeWithTag("home_calendar_week_strip", useUnmergedTree = true).assertExists()
+        composeRule.onNodeWithTag("home_calendar_card").performClick()
+        assertTrue("Expected clicking Calendar widget to open CALENDAR_DETAIL", navigatedToCalendar)
+
+        // When both Adhan & Calendar are enabled, user can flip cleanly in the same left slot
+        showPrayerAlso.value = true
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("switch_left_widget_btn").assertIsDisplayed().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("home_prayer_card").assertIsDisplayed()
+    }
+
+    @Test
+    fun newThemeCategories_flagsCinemaAndAnime_renderAndSelectCleanly() {
+        var appliedPreset: com.example.model.ThemePreset? = null
+        val state = LauncherUiState(
+            settings = LauncherSettings(
+                language = LauncherLanguage.AR,
+                themePreset = com.example.model.ThemePreset.FLAG_ALGERIA,
+                wallpaperId = "flag_algeria",
+            ),
+        )
+
+        composeRule.setContent {
+            HorizonLauncherTheme {
+                com.example.ui.components.LauncherWallpaperLayer(settings = state.settings)
+                com.example.ui.screens.UiCustomizerScreen(
+                    state = state,
+                    onBack = {},
+                    onUpdateSettings = {},
+                    onApplyThemePreset = { appliedPreset = it },
+                )
+            }
+        }
+        composeRule.waitForIdle()
+
+        val expectedNewIds = listOf(
+            "flag_algeria", "flag_egypt", "flag_saudi_arabia", "flag_france",
+            "flag_germany", "flag_spain", "flag_uk",
+            "cinema_classic", "cinema_scifi", "cinema_retro",
+            "anime_grendizer", "anime_remi", "anime_sandybell", "anime_dbz",
+        )
+        expectedNewIds.forEach { id ->
+            composeRule.onNodeWithTag("theme_preset_$id").assertExists()
+        }
+
+        // Verify drawable-backed themes have valid drawables and procedural themes are registered
+        assertTrue(com.example.ui.components.wallpaperDrawableRes("cinema_classic") != null)
+        assertTrue(com.example.ui.components.wallpaperDrawableRes("anime_grendizer") != null)
+        assertTrue(com.example.ui.components.wallpaperDrawableRes("anime_remi") != null)
+        assertTrue(com.example.ui.components.wallpaperDrawableRes("anime_sandybell") != null)
+        assertTrue(com.example.ui.components.wallpaperDrawableRes("anime_dbz") != null)
+        assertTrue(com.example.ui.components.hasBuiltInArtworkWallpaper("flag_algeria"))
+        assertTrue(com.example.ui.components.hasBuiltInArtworkWallpaper("cinema_scifi"))
+
+        composeRule.onNodeWithTag("theme_preset_anime_grendizer")
+            .performScrollTo()
+            .performClick()
+        assertEquals(com.example.model.ThemePreset.ANIME_GRENDIZER, appliedPreset)
     }
 }
 

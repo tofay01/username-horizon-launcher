@@ -92,6 +92,9 @@ data class LocalizedStrings(
     val themeCategoryClubs: String,
     val themeCategoryNational: String,
     val themeCategoryArab: String,
+    val themeCategoryFlags: String,
+    val themeCategoryCinema: String,
+    val themeCategoryAnime: String,
     val cardTransparencyTitle: String,
     val cardTransparencyHint: String,
     val cardCornerRadiusTitle: String,
@@ -167,6 +170,22 @@ data class LocalizedStrings(
     val updateUpToDateStatus: String,
     val updateNoApkStatus: String,
     val updateErrorStatus: String,
+    val calendarSectionTitle: String,
+    val calendarScreenTitle: String,
+    val calendarTodayBtn: String,
+    val calendarWeekPrefix: String,
+    val calendarDayOfYearLabel: String,
+    val calendarDaysLeftLabel: String,
+    val calendarUseAsHomeCardBtn: String,
+    val leftWidgetModeTitle: String,
+    val leftWidgetModeDesc: String,
+    val leftWidgetModeAdhan: String,
+    val leftWidgetModeCalendar: String,
+    val leftWidgetModeBoth: String,
+    val leftWidgetModeHidden: String,
+    val showPrayerCardToggle: String,
+    val showCalendarCardToggle: String,
+    val showWeatherCardToggle: String,
 )
 
 object LauncherStrings {
@@ -263,6 +282,9 @@ object LauncherStrings {
             themeCategoryClubs = "Thèmes Sportifs · Clubs célèbres",
             themeCategoryNational = "Thèmes Sportifs · Équipes nationales",
             themeCategoryArab = "Thèmes Sportifs · Équipes arabes",
+            themeCategoryFlags = "Drapeaux Nationaux",
+            themeCategoryCinema = "Cinéma & Rétro",
+            themeCategoryAnime = "Dessins Animés & Manga Cultes",
             cardTransparencyTitle = "Opacité / transparence des cartes",
             cardTransparencyHint = "0% = verre totalement transparent · 95% = verre opaque",
             cardCornerRadiusTitle = "Arrondi des tuiles",
@@ -338,6 +360,22 @@ object LauncherStrings {
             updateUpToDateStatus = "Vous utilisez la dernière version",
             updateNoApkStatus = "Aucune pièce jointe .apk trouvée dans la dernière Release GitHub",
             updateErrorStatus = "Impossible de contacter GitHub Releases",
+            calendarSectionTitle = "CALENDRIER",
+            calendarScreenTitle = "Calendrier Quotidien",
+            calendarTodayBtn = "Aujourd'hui",
+            calendarWeekPrefix = "Sem.",
+            calendarDayOfYearLabel = "Jour de l'année",
+            calendarDaysLeftLabel = "Jours restants",
+            calendarUseAsHomeCardBtn = "Utiliser à la place de l'Adhan sur l'accueil",
+            leftWidgetModeTitle = "Carte gauche (Adhan ou Calendrier)",
+            leftWidgetModeDesc = "Remplacez l'Adhan par le calendrier quotidien, affichez les deux avec bascule, ou masquez la carte.",
+            leftWidgetModeAdhan = "Adhan",
+            leftWidgetModeCalendar = "Calendrier",
+            leftWidgetModeBoth = "Les deux",
+            leftWidgetModeHidden = "Masquée",
+            showPrayerCardToggle = "Afficher la carte Prières / Adhan",
+            showCalendarCardToggle = "Afficher la carte Calendrier quotidien",
+            showWeatherCardToggle = "Afficher la carte Météo GPS",
         )
 
         LauncherLanguage.AR -> LocalizedStrings(
@@ -432,6 +470,9 @@ object LauncherStrings {
             themeCategoryClubs = "ثيمات رياضية · أشهر الأندية",
             themeCategoryNational = "ثيمات رياضية · المنتخبات العالمية",
             themeCategoryArab = "ثيمات رياضية · المنتخبات العربية",
+            themeCategoryFlags = "ثيمات أعلام الدول",
+            themeCategoryCinema = "ثيمات السينما والأفلام",
+            themeCategoryAnime = "ثيمات الرسوم المتحركة الشهيرة",
             cardTransparencyTitle = "مستوى شفافية البطاقات",
             cardTransparencyHint = "0% = شفاف تماماً لإظهار الخلفية · 95% = داكن وواضح",
             cardCornerRadiusTitle = "استدارة حواف البطاقات",
@@ -507,6 +548,22 @@ object LauncherStrings {
             updateUpToDateStatus = "لديك أحدث إصدار",
             updateNoApkStatus = "لم يتم العثور على ملف .apk مرفق في آخر Release على GitHub",
             updateErrorStatus = "تعذر الاتصال بـ GitHub Releases",
+            calendarSectionTitle = "الرزنامة",
+            calendarScreenTitle = "الرزنامة اليومية والتقويم",
+            calendarTodayBtn = "اليوم",
+            calendarWeekPrefix = "أسبوع",
+            calendarDayOfYearLabel = "يوم من السنة",
+            calendarDaysLeftLabel = "أيام متبقية",
+            calendarUseAsHomeCardBtn = "تعيين كبديل لبطاقة الأذان في الرئيسية",
+            leftWidgetModeTitle = "بطاقة اليسار (الأذان أو الرزنامة)",
+            leftWidgetModeDesc = "يمكنك استخدام الرزنامة اليومية كبديل للأذان، أو التبديل بينهما، أو إخفاؤها تماماً.",
+            leftWidgetModeAdhan = "الأذان",
+            leftWidgetModeCalendar = "الرزنامة",
+            leftWidgetModeBoth = "كلاهما",
+            leftWidgetModeHidden = "إخفاء",
+            showPrayerCardToggle = "إظهار بطاقة الأذان ومواقيت الصلاة",
+            showCalendarCardToggle = "إظهار بطاقة الرزنامة اليومية",
+            showWeatherCardToggle = "إظهار بطاقة الطقس والموقع",
         )
 
         LauncherLanguage.EN -> LocalizedStrings(
@@ -601,6 +658,9 @@ object LauncherStrings {
             themeCategoryClubs = "Sports Themes · Top Clubs",
             themeCategoryNational = "Sports Themes · National Teams",
             themeCategoryArab = "Sports Themes · Arab National Teams",
+            themeCategoryFlags = "Country Flags",
+            themeCategoryCinema = "Cinema & Film",
+            themeCategoryAnime = "Classic Anime & Cartoons",
             cardTransparencyTitle = "Card opacity / transparency",
             cardTransparencyHint = "0% = clear glass over wallpaper · 95% = solid frosted glass",
             cardCornerRadiusTitle = "Tile corner radius",
@@ -676,6 +736,22 @@ object LauncherStrings {
             updateUpToDateStatus = "You are up to date",
             updateNoApkStatus = "No .apk asset attached to latest GitHub Release",
             updateErrorStatus = "Unable to reach GitHub Releases",
+            calendarSectionTitle = "CALENDAR",
+            calendarScreenTitle = "Daily Calendar",
+            calendarTodayBtn = "Today",
+            calendarWeekPrefix = "Wk",
+            calendarDayOfYearLabel = "Day of Year",
+            calendarDaysLeftLabel = "Days Left",
+            calendarUseAsHomeCardBtn = "Use instead of Adhan on Home Screen",
+            leftWidgetModeTitle = "Left Card (Adhan or Calendar)",
+            leftWidgetModeDesc = "Use Daily Calendar as an alternative to Adhan, switch between both, or hide the card.",
+            leftWidgetModeAdhan = "Adhan",
+            leftWidgetModeCalendar = "Calendar",
+            leftWidgetModeBoth = "Both",
+            leftWidgetModeHidden = "Hidden",
+            showPrayerCardToggle = "Show Prayer / Adhan card",
+            showCalendarCardToggle = "Show Daily Calendar card",
+            showWeatherCardToggle = "Show GPS Weather card",
         )
     }
 
@@ -713,6 +789,7 @@ object LauncherStrings {
             GestureAction.OPEN_SETTINGS -> "Ouvrir les paramètres"
             GestureAction.OPEN_WEATHER -> "Ouvrir la météo locale"
             GestureAction.OPEN_PRAYER -> "Ouvrir les prières & Adhan"
+            GestureAction.OPEN_CALENDAR -> "Ouvrir le calendrier quotidien"
             GestureAction.OPEN_WALLPAPER_STUDIO -> "Ouvrir le Studio de fonds d'écran"
             GestureAction.OPEN_UI_CUSTOMIZER -> "Personnaliser l'interface"
             GestureAction.TOGGLE_ADHAN_AUDIO -> "Tester / Arrêter l'Adhan"
@@ -725,6 +802,7 @@ object LauncherStrings {
             GestureAction.OPEN_SETTINGS -> "فتح الإعدادات"
             GestureAction.OPEN_WEATHER -> "فتح أحوال الطقس"
             GestureAction.OPEN_PRAYER -> "فتح مواقيت الصلاة والأذان"
+            GestureAction.OPEN_CALENDAR -> "فتح الرزنامة اليومية"
             GestureAction.OPEN_WALLPAPER_STUDIO -> "فتح استوديو الخلفيات"
             GestureAction.OPEN_UI_CUSTOMIZER -> "تخصيص الواجهة"
             GestureAction.TOGGLE_ADHAN_AUDIO -> "تشغيل / إيقاف الأذان"
@@ -737,6 +815,7 @@ object LauncherStrings {
             GestureAction.OPEN_SETTINGS -> "Open Settings"
             GestureAction.OPEN_WEATHER -> "Open Local Weather"
             GestureAction.OPEN_PRAYER -> "Open Prayer Times & Adhan"
+            GestureAction.OPEN_CALENDAR -> "Open Daily Calendar"
             GestureAction.OPEN_WALLPAPER_STUDIO -> "Open Wallpaper Studio"
             GestureAction.OPEN_UI_CUSTOMIZER -> "Customize UI & Theme"
             GestureAction.TOGGLE_ADHAN_AUDIO -> "Play / Stop Adhan"

@@ -92,7 +92,9 @@ import com.example.ui.LauncherUiState
 import com.example.ui.components.GlassSegmentedSelector
 import com.example.ui.components.GlassSettingCardRow
 import com.example.ui.components.GlassToggleRow
+import com.example.ui.components.ProceduralThemeWallpaper
 import com.example.ui.components.TvFocusableSurface
+import com.example.ui.components.hasBuiltInArtworkWallpaper
 import com.example.ui.components.wallpaperDrawableRes
 import com.example.ui.theme.DeepSpaceBlack
 import com.example.ui.theme.EmeraldGlow
@@ -231,8 +233,8 @@ fun WallpaperStudioScreen(
             BuiltInWallpaper("cobalt_waves", "Ondes Cobalt", R.drawable.img_wallpaper_cobalt_waves),
             BuiltInWallpaper("gradient_dark", "Dégradé Thème", null),
         )
-        val sports = ThemePreset.entries
-            .filter { it.isSportsTheme }
+        val themedWallpapers = ThemePreset.entries
+            .filter { it.category != ThemeCategory.CLASSIC }
             .map { preset ->
                 val title = when (settings.language) {
                     LauncherLanguage.AR -> preset.labelAr
@@ -264,7 +266,7 @@ fun WallpaperStudioScreen(
                     drawableRes = R.drawable.img_sport_brazil_light,
                 ),
             )
-        scenic + sports
+        scenic + themedWallpapers
     }
 
     Column(
@@ -652,6 +654,11 @@ private fun BuiltInWallpaperCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
+            } else if (hasBuiltInArtworkWallpaper(wp.id)) {
+                ProceduralThemeWallpaper(
+                    wallpaperId = wp.id,
+                    modifier = Modifier.fillMaxSize(),
+                )
             } else {
                 Box(
                     modifier = Modifier
@@ -782,13 +789,16 @@ fun UiCustomizerScreen(
                 Text(strings.uiCustomization, style = MaterialTheme.typography.headlineLarge, color = PureWhite)
             }
 
-            // Categorized Theme Presets (Horizon Classic + Sports Clubs + National Teams + Arab National Teams)
+            // Categorized Theme Presets (Classic + Sports + Country Flags + Cinema + Anime)
             val themeGroups = remember(strings) {
                 listOf(
                     strings.themeCategoryClassic to ThemePreset.entries.filter { it.category == ThemeCategory.CLASSIC },
                     strings.themeCategoryClubs to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_CLUBS },
                     strings.themeCategoryNational to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_NATIONAL },
                     strings.themeCategoryArab to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_ARAB },
+                    strings.themeCategoryFlags to ThemePreset.entries.filter { it.category == ThemeCategory.COUNTRY_FLAGS },
+                    strings.themeCategoryCinema to ThemePreset.entries.filter { it.category == ThemeCategory.CINEMA },
+                    strings.themeCategoryAnime to ThemePreset.entries.filter { it.category == ThemeCategory.ANIME },
                 )
             }
             themeGroups.forEach { (categoryTitle, presets) ->
@@ -829,6 +839,11 @@ fun UiCustomizerScreen(
                                         painter = painterResource(id = previewRes),
                                         contentDescription = label,
                                         contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                } else if (hasBuiltInArtworkWallpaper(preset.defaultWallpaperId)) {
+                                    ProceduralThemeWallpaper(
+                                        wallpaperId = preset.defaultWallpaperId,
                                         modifier = Modifier.fillMaxSize(),
                                     )
                                 } else {
@@ -1149,9 +1164,52 @@ fun UiCustomizerScreen(
                 testTag = "toggle_navigation_sound",
             )
 
-            // Widget Visibility Toggles
+            // Left Widget Mode Selector (Adhan vs Daily Calendar alternative) + Visibility Toggles
+            val currentLeftMode = when {
+                settings.showPrayerWidget && settings.showCalendarWidget -> "both"
+                !settings.showPrayerWidget && settings.showCalendarWidget -> "calendar"
+                settings.showPrayerWidget && !settings.showCalendarWidget -> "prayer"
+                else -> "hidden"
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = strings.leftWidgetModeTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = accent,
+                )
+                Text(
+                    text = strings.leftWidgetModeDesc,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MutedSlate,
+                )
+                GlassSegmentedSelector(
+                    options = listOf("prayer", "calendar", "both", "hidden"),
+                    selected = currentLeftMode,
+                    labelProvider = { mode ->
+                        when (mode) {
+                            "prayer" -> strings.leftWidgetModeAdhan
+                            "calendar" -> strings.leftWidgetModeCalendar
+                            "both" -> strings.leftWidgetModeBoth
+                            else -> strings.leftWidgetModeHidden
+                        }
+                    },
+                    accentColor = accent,
+                    onSelect = { mode ->
+                        onUpdateSettings { s ->
+                            when (mode) {
+                                "prayer" -> s.copy(showPrayerWidget = true, showCalendarWidget = false)
+                                "calendar" -> s.copy(showPrayerWidget = false, showCalendarWidget = true)
+                                "both" -> s.copy(showPrayerWidget = true, showCalendarWidget = true)
+                                else -> s.copy(showPrayerWidget = false, showCalendarWidget = false)
+                            }
+                        }
+                    },
+                    testTagPrefix = "left_widget_mode",
+                )
+            }
+
             GlassToggleRow(
-                title = "Afficher la carte Prières / Aladhan",
+                title = strings.showPrayerCardToggle,
                 checked = settings.showPrayerWidget,
                 accentColor = accent,
                 onCheckedChange = { v -> onUpdateSettings { it.copy(showPrayerWidget = v) } },
@@ -1159,7 +1217,15 @@ fun UiCustomizerScreen(
             )
 
             GlassToggleRow(
-                title = "Afficher la carte Météo GPS",
+                title = strings.showCalendarCardToggle,
+                checked = settings.showCalendarWidget,
+                accentColor = accent,
+                onCheckedChange = { v -> onUpdateSettings { it.copy(showCalendarWidget = v) } },
+                testTag = "toggle_calendar_widget",
+            )
+
+            GlassToggleRow(
+                title = strings.showWeatherCardToggle,
                 checked = settings.showWeatherWidget,
                 accentColor = accent,
                 onCheckedChange = { v -> onUpdateSettings { it.copy(showWeatherWidget = v) } },

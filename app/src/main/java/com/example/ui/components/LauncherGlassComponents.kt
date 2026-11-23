@@ -156,6 +156,11 @@ fun wallpaperDrawableRes(wallpaperId: String): Int? = when (wallpaperId) {
     "video_crimson_nebula" -> R.drawable.thumb_video_crimson_nebula
     "video_cobalt_fractal" -> R.drawable.thumb_video_cobalt_fractal
     "video_violet_nebula" -> R.drawable.thumb_video_violet_nebula
+    "cinema_classic" -> R.drawable.img_cinema_classic
+    "anime_grendizer" -> R.drawable.img_anime_grendizer
+    "anime_remi" -> R.drawable.img_anime_remi
+    "anime_sandybell" -> R.drawable.img_anime_sandybell
+    "anime_dbz" -> R.drawable.img_anime_dbz
     else -> null
 }
 
@@ -195,11 +200,22 @@ fun LauncherWallpaperLayer(
         } else {
             val posterResId = wallpaperDrawableRes(settings.wallpaperId)
                 ?: wallpaperDrawableRes(settings.themePreset.defaultWallpaperId)
+            val proceduralId = when {
+                hasBuiltInArtworkWallpaper(settings.wallpaperId) -> settings.wallpaperId
+                posterResId == null && hasBuiltInArtworkWallpaper(settings.themePreset.defaultWallpaperId) ->
+                    settings.themePreset.defaultWallpaperId
+                else -> null
+            }
             if (posterResId != null) {
                 Image(
                     painter = painterResource(id = posterResId),
                     contentDescription = "Launcher wallpaper",
                     contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else if (proceduralId != null) {
+                ProceduralThemeWallpaper(
+                    wallpaperId = proceduralId,
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {

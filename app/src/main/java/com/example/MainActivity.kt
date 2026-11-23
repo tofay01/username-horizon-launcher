@@ -47,6 +47,7 @@ import com.example.ui.components.LocalNavigationSoundEnabled
 import com.example.ui.screens.AboutSupportScreen
 import com.example.ui.screens.AppContextDialog
 import com.example.ui.screens.AppLibraryScreen
+import com.example.ui.screens.CalendarDetailScreen
 import com.example.ui.screens.EditFavoritesScreen
 import com.example.ui.screens.GestureShortcutsScreen
 import com.example.ui.screens.HiddenAppsScreen
@@ -332,6 +333,11 @@ fun HorizonLauncherRoot(
                                 onCustomAdhanPicked = viewModel::setCustomAdhanUri,
                                 onClearCustomAdhan = viewModel::clearCustomAdhanUri,
                                 onTestOrStopAdhan = viewModel::testOrStopAdhan,
+                            )
+                            LauncherDestination.CALENDAR_DETAIL -> CalendarDetailScreen(
+                                state = state,
+                                onBack = { viewModel.navigateBack() },
+                                onUpdateSettings = viewModel::updateSettings,
                             )
                         }
                     }

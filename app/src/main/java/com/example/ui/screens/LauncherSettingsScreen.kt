@@ -478,6 +478,51 @@ fun LauncherSettingsScreen(
                 testTag = "open_weather_settings",
             )
 
+            // Home Widgets: Adhan vs Daily Calendar + Weather
+            val currentLeftMode = when {
+                settings.showPrayerWidget && settings.showCalendarWidget -> "both"
+                !settings.showPrayerWidget && settings.showCalendarWidget -> "calendar"
+                settings.showPrayerWidget && !settings.showCalendarWidget -> "prayer"
+                else -> "hidden"
+            }
+            Text(
+                text = strings.leftWidgetModeTitle,
+                style = MaterialTheme.typography.titleMedium,
+                color = PureWhite,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+            GlassSegmentedSelector(
+                options = listOf("prayer", "calendar", "both", "hidden"),
+                selected = currentLeftMode,
+                labelProvider = { mode ->
+                    when (mode) {
+                        "prayer" -> strings.leftWidgetModeAdhan
+                        "calendar" -> strings.leftWidgetModeCalendar
+                        "both" -> strings.leftWidgetModeBoth
+                        else -> strings.leftWidgetModeHidden
+                    }
+                },
+                accentColor = accent,
+                onSelect = { mode ->
+                    onUpdateSettings { s ->
+                        when (mode) {
+                            "prayer" -> s.copy(showPrayerWidget = true, showCalendarWidget = false)
+                            "calendar" -> s.copy(showPrayerWidget = false, showCalendarWidget = true)
+                            "both" -> s.copy(showPrayerWidget = true, showCalendarWidget = true)
+                            else -> s.copy(showPrayerWidget = false, showCalendarWidget = false)
+                        }
+                    }
+                },
+                testTagPrefix = "settings_left_widget_mode",
+            )
+            GlassToggleRow(
+                title = strings.showWeatherCardToggle,
+                checked = settings.showWeatherWidget,
+                accentColor = accent,
+                onCheckedChange = { checked -> onUpdateSettings { it.copy(showWeatherWidget = checked) } },
+                testTag = "settings_toggle_weather_widget",
+            )
+
             // Animations & Advanced effects
             GlassSettingCardRow(
                 title = "${strings.animations} : ${if (settings.animationsEnabled) strings.enabledLabel else strings.disabledLabel}",

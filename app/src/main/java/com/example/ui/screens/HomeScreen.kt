@@ -78,6 +78,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -266,6 +267,19 @@ fun HomeScreen(
             val dockGlassAlpha = settings.glassOpacity.coerceIn(0f, 0.95f)
             val tileSpacing = ((if (!isCompactWidth && (settings.iconSize == AppIconSize.LARGE || perRow >= 7)) 6f else 8f) * dockScale).dp
             val useScroll = isCompactWidth || settings.rowsBelowFavorites > 0 || favoriteRows.size > 1
+            var showCalendarInLeftSlot by rememberSaveable(settings.showPrayerWidget, settings.showCalendarWidget) {
+                mutableStateOf(settings.showCalendarWidget)
+            }
+            val hasLeftPrayer = settings.showPrayerWidget
+            val hasLeftCalendar = settings.showCalendarWidget
+            val canSwitchLeftCard = hasLeftPrayer && hasLeftCalendar
+            val showCalendarActive = when {
+                hasLeftCalendar && !hasLeftPrayer -> true
+                hasLeftPrayer && !hasLeftCalendar -> false
+                hasLeftCalendar && hasLeftPrayer -> showCalendarInLeftSlot
+                else -> false
+            }
+            val showPrayerActive = (hasLeftPrayer || hasLeftCalendar) && !showCalendarActive
 
             val middleCardsRow: @Composable () -> Unit = {
                 if (isCompactWidth) {
@@ -294,17 +308,39 @@ fun HomeScreen(
                                 .weight(0.46f)
                                 .align(Alignment.Top),
                         ) {
-                            if (settings.showPrayerWidget) {
+                            if (showPrayerActive) {
                                 PrayerWidgetCard(
                                     state = state,
                                     strings = strings,
                                     accent = accent,
                                     isCompact = true,
                                     onClick = { onNavigate(LauncherDestination.PRAYER_AND_ADHAN) },
+                                    onSwitchToCalendar = if (canSwitchLeftCard) {
+                                        { showCalendarInLeftSlot = true }
+                                    } else {
+                                        null
+                                    },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .wrapContentHeight()
                                         .testTag("home_prayer_card"),
+                                )
+                            } else if (showCalendarActive) {
+                                CalendarWidgetCard(
+                                    state = state,
+                                    strings = strings,
+                                    accent = accent,
+                                    isCompact = true,
+                                    onClick = { onNavigate(LauncherDestination.CALENDAR_DETAIL) },
+                                    onSwitchToPrayer = if (canSwitchLeftCard) {
+                                        { showCalendarInLeftSlot = false }
+                                    } else {
+                                        null
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentHeight()
+                                        .testTag("home_calendar_card"),
                                 )
                             }
                             AnimatedVisibility(
@@ -354,17 +390,39 @@ fun HomeScreen(
                                 .weight(1f)
                                 .align(Alignment.Top),
                         ) {
-                            if (settings.showPrayerWidget) {
+                            if (showPrayerActive) {
                                 PrayerWidgetCard(
                                     state = state,
                                     strings = strings,
                                     accent = accent,
                                     isCompact = false,
                                     onClick = { onNavigate(LauncherDestination.PRAYER_AND_ADHAN) },
+                                    onSwitchToCalendar = if (canSwitchLeftCard) {
+                                        { showCalendarInLeftSlot = true }
+                                    } else {
+                                        null
+                                    },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .wrapContentHeight()
                                         .testTag("home_prayer_card"),
+                                )
+                            } else if (showCalendarActive) {
+                                CalendarWidgetCard(
+                                    state = state,
+                                    strings = strings,
+                                    accent = accent,
+                                    isCompact = false,
+                                    onClick = { onNavigate(LauncherDestination.CALENDAR_DETAIL) },
+                                    onSwitchToPrayer = if (canSwitchLeftCard) {
+                                        { showCalendarInLeftSlot = false }
+                                    } else {
+                                        null
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentHeight()
+                                        .testTag("home_calendar_card"),
                                 )
                             }
 
@@ -1254,6 +1312,7 @@ private fun PrayerWidgetCard(
     accent: Color,
     isCompact: Boolean,
     onClick: () -> Unit,
+    onSwitchToCalendar: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val settings = state.settings
@@ -1322,16 +1381,42 @@ private fun PrayerWidgetCard(
                     bottom = if (isCompact) 8.dp else 10.dp,
                 ),
         ) {
-            Text(
-                text = strings.prayerSectionTitle,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = if (isCompact) 14.sp else 18.sp,
-                    fontWeight = FontWeight.Medium,
-                ),
-                color = PureWhite,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = strings.prayerSectionTitle,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = if (isCompact) 14.sp else 18.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                    color = PureWhite,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (onSwitchToCalendar != null) {
+                    TvFocusableSurface(
+                        onClick = onSwitchToCalendar,
+                        accentColor = accent,
+                        shape = RoundedCornerShape(8.dp),
+                        baseColor = accent.copy(alpha = 0.18f),
+                        modifier = Modifier.testTag("switch_left_widget_btn"),
+                    ) {
+                        Text(
+                            text = "⇄ ${strings.leftWidgetModeCalendar}",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = if (isCompact) 9.sp else 10.sp,
+                                fontWeight = FontWeight.Bold,
+                            ),
+                            color = PureWhite,
+                            maxLines = 1,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                        )
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(if (isCompact) 4.dp else 5.dp))
             Box(
                 modifier = Modifier
@@ -1391,6 +1476,169 @@ private fun PrayerWidgetCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+        }
+    }
+}
+
+@Composable
+private fun CalendarWidgetCard(
+    state: LauncherUiState,
+    strings: LocalizedStrings,
+    accent: Color,
+    isCompact: Boolean,
+    onClick: () -> Unit,
+    onSwitchToPrayer: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+) {
+    val settings = state.settings
+    val dayBucket = state.formattedDate + "_" + settings.language.code + "_" + settings.timezoneId
+    val snapshot = remember(dayBucket) {
+        HorizonCalendarHelper.computeDailySnapshot(
+            nowMillis = System.currentTimeMillis(),
+            language = settings.language,
+            timezoneId = settings.timezoneId,
+        )
+    }
+
+    val glassAlpha = settings.glassOpacity.coerceIn(0f, 0.95f)
+    OrbitContouredCardSurface(
+        onClick = onClick,
+        accentColor = accent,
+        surfaceColor = Color(settings.themePreset.surfaceHex),
+        glassAlpha = glassAlpha,
+        cutoutDepth = if (isCompact) 12.dp else 26.dp,
+        cornerRadius = 18.dp,
+        isLeftPrayerShape = true,
+        modifier = modifier,
+    ) { isFocused ->
+        Column(
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.Top,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = if (isCompact) 10.dp else 16.dp,
+                    end = if (isCompact) 14.dp else 30.dp,
+                    top = if (isCompact) 8.dp else 10.dp,
+                    bottom = if (isCompact) 8.dp else 10.dp,
+                ),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = strings.calendarSectionTitle,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = if (isCompact) 14.sp else 18.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                    color = PureWhite,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (onSwitchToPrayer != null) {
+                    TvFocusableSurface(
+                        onClick = onSwitchToPrayer,
+                        accentColor = accent,
+                        shape = RoundedCornerShape(8.dp),
+                        baseColor = accent.copy(alpha = 0.18f),
+                        modifier = Modifier.testTag("switch_left_widget_btn"),
+                    ) {
+                        Text(
+                            text = "⇄ ${strings.leftWidgetModeAdhan}",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = if (isCompact) 9.sp else 10.sp,
+                                fontWeight = FontWeight.Bold,
+                            ),
+                            color = PureWhite,
+                            maxLines = 1,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                        )
+                    }
+                } else {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = accent.copy(alpha = 0.16f),
+                        border = BorderStroke(1.dp, accent.copy(alpha = 0.45f)),
+                    ) {
+                        Text(
+                            text = "${strings.calendarWeekPrefix} ${snapshot.weekOfYear}",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = if (isCompact) 9.sp else 10.sp,
+                                fontWeight = FontWeight.Bold,
+                            ),
+                            color = PureWhite,
+                            maxLines = 1,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(if (isCompact) 4.dp else 5.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color.White.copy(alpha = 0.18f))
+            )
+            Spacer(modifier = Modifier.height(if (isCompact) 5.dp else 7.dp))
+            Text(
+                text = "${snapshot.monthYearLabel} · ${snapshot.dayOfYear}/${snapshot.totalDaysInYear}",
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isCompact) 10.sp else 12.sp),
+                color = if (isFocused) PureWhite else MutedSlate,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag("home_calendar_month_year"),
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "${snapshot.dayOfMonth} · ${snapshot.weekdayName}",
+                style = MaterialTheme.typography.titleLarge.copy(fontSize = if (isCompact) 14.sp else 19.sp),
+                color = PureWhite,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag("home_calendar_hero_day"),
+            )
+            Spacer(modifier = Modifier.height(if (isCompact) 5.dp else 6.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("home_calendar_week_strip"),
+            ) {
+                snapshot.weekDays.forEach { dayItem ->
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (dayItem.isToday) accent.copy(alpha = 0.34f) else Color.Transparent,
+                        border = if (dayItem.isToday) BorderStroke(1.dp, accent.copy(alpha = 0.85f)) else null,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(vertical = 2.dp),
+                        ) {
+                            Text(
+                                text = dayItem.shortLabel,
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = if (isCompact) 8.5.sp else 9.5.sp),
+                                color = if (dayItem.isToday) PureWhite else MutedSlate,
+                                maxLines = 1,
+                            )
+                            Text(
+                                text = dayItem.dayOfMonth.toString(),
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = if (isCompact) 9.5.sp else 10.5.sp,
+                                    fontWeight = if (dayItem.isToday) FontWeight.ExtraBold else FontWeight.SemiBold,
+                                ),
+                                color = if (dayItem.isToday) PureWhite else PureWhite.copy(alpha = 0.88f),
+                                maxLines = 1,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -60,6 +60,7 @@ class LauncherPreferencesRepository(private val context: Context) {
         val NAVIGATION_SOUND_ENABLED = booleanPreferencesKey("navigation_sound_enabled")
         val SHOW_WEATHER_WIDGET = booleanPreferencesKey("show_weather_widget")
         val SHOW_PRAYER_WIDGET = booleanPreferencesKey("show_prayer_widget")
+        val SHOW_CALENDAR_WIDGET = booleanPreferencesKey("show_calendar_widget")
         val USE_CELSIUS = booleanPreferencesKey("use_celsius")
         val USE_GPS_LOCATION = booleanPreferencesKey("use_gps_location")
         val CITY_NAME = stringPreferencesKey("city_name")
@@ -122,6 +123,7 @@ class LauncherPreferencesRepository(private val context: Context) {
             prefs[Keys.NAVIGATION_SOUND_ENABLED] = updated.navigationSoundEnabled
             prefs[Keys.SHOW_WEATHER_WIDGET] = updated.showWeatherWidget
             prefs[Keys.SHOW_PRAYER_WIDGET] = updated.showPrayerWidget
+            prefs[Keys.SHOW_CALENDAR_WIDGET] = updated.showCalendarWidget
             prefs[Keys.USE_CELSIUS] = updated.useCelsius
             prefs[Keys.USE_GPS_LOCATION] = updated.useGpsLocation
             prefs[Keys.CITY_NAME] = updated.cityName
@@ -236,6 +238,7 @@ class LauncherPreferencesRepository(private val context: Context) {
             navigationSoundEnabled = prefs[Keys.NAVIGATION_SOUND_ENABLED] ?: defaultSettings.navigationSoundEnabled,
             showWeatherWidget = prefs[Keys.SHOW_WEATHER_WIDGET] ?: defaultSettings.showWeatherWidget,
             showPrayerWidget = prefs[Keys.SHOW_PRAYER_WIDGET] ?: defaultSettings.showPrayerWidget,
+            showCalendarWidget = prefs[Keys.SHOW_CALENDAR_WIDGET] ?: defaultSettings.showCalendarWidget,
             useCelsius = prefs[Keys.USE_CELSIUS] ?: defaultSettings.useCelsius,
             useGpsLocation = prefs[Keys.USE_GPS_LOCATION] ?: defaultSettings.useGpsLocation,
             cityName = prefs[Keys.CITY_NAME] ?: defaultSettings.cityName,
@@ -255,7 +258,7 @@ class LauncherPreferencesRepository(private val context: Context) {
             developerName = prefs[Keys.DEVELOPER_NAME]?.takeIf { it.isNotBlank() } ?: defaultSettings.developerName,
             developerEmail = prefs[Keys.DEVELOPER_EMAIL]?.takeIf { it.isNotBlank() } ?: defaultSettings.developerEmail,
             developerWhatsApp = prefs[Keys.DEVELOPER_WHATSAPP] ?: defaultSettings.developerWhatsApp,
-            githubUpdateRepo = prefs[Keys.GITHUB_UPDATE_REPO] ?: defaultSettings.githubUpdateRepo,
+            githubUpdateRepo = prefs[Keys.GITHUB_UPDATE_REPO]?.takeIf { it.isNotBlank() } ?: defaultSettings.githubUpdateRepo,
             autoCheckUpdatesOnStartup = prefs[Keys.AUTO_CHECK_UPDATES] ?: defaultSettings.autoCheckUpdatesOnStartup,
             favoritePackages = favorites,
             aiToolShortcuts = aiTools,
