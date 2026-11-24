@@ -24,8 +24,7 @@ data class LocalizedStrings(
     val timeFormat12: String,
     val showDate: String,
     val showGreeting: String,
-    val wallpaperStudio: String,
-    val uiCustomization: String,
+    val themeAndWallpaperTitle: String,
     val gestureShortcuts: String,
     val prayerCity: String,
     val prayerTimezone: String,
@@ -89,6 +88,7 @@ data class LocalizedStrings(
     val adhanModeAudio: String,
     val aiBarMaxReached: String,
     val themeCategoryClassic: String,
+    val themeCategorySignature: String,
     val themeCategoryClubs: String,
     val themeCategoryNational: String,
     val themeCategoryArab: String,
@@ -186,6 +186,14 @@ data class LocalizedStrings(
     val showPrayerCardToggle: String,
     val showCalendarCardToggle: String,
     val showWeatherCardToggle: String,
+    val wallpapersSectionTitle: String,
+    val appearanceSectionTitle: String,
+    val accentColorTitle: String,
+    val mainRowTitleLabel: String,
+    val dockStyleTitle: String,
+    val dockStyleFloating: String,
+    val dockStyleFullWidth: String,
+    val dockStyleMinimal: String,
 )
 
 object LauncherStrings {
@@ -214,8 +222,7 @@ object LauncherStrings {
             timeFormat12 = "12 heures",
             showDate = "Afficher la date",
             showGreeting = "Afficher le message d'accueil",
-            wallpaperStudio = "Studio de fonds d'écran Horizon",
-            uiCustomization = "Personnalisation de l'interface & Thèmes",
+            themeAndWallpaperTitle = "Personnalisation Thème & Fond d'écran",
             gestureShortcuts = "Raccourcis d'gestes rapides",
             prayerCity = "Ville de prière",
             prayerTimezone = "Fuseau de prière",
@@ -279,6 +286,7 @@ object LauncherStrings {
             adhanModeAudio = "Adhan Audio Auto",
             aiBarMaxReached = "Maximum 4 outils IA dans la barre · Retirez-en un pour en ajouter",
             themeCategoryClassic = "Thèmes Horizon",
+            themeCategorySignature = "Interfaces Signature · Nouveaux Styles",
             themeCategoryClubs = "Thèmes Sportifs · Clubs célèbres",
             themeCategoryNational = "Thèmes Sportifs · Équipes nationales",
             themeCategoryArab = "Thèmes Sportifs · Équipes arabes",
@@ -307,7 +315,7 @@ object LauncherStrings {
             tvPowerEnableAccessibilityBtn = "Activer via Accessibilité",
             tvPowerAdminExplanation = "Permet au bouton d'alimentation Horizon d'éteindre / mettre en veille le téléviseur.",
             animatedVideoWallpapersSection = "Fonds d'écran vidéo animés",
-            staticWallpapersSection = "Fonds d'écran Horizon & Sport",
+            staticWallpapersSection = "Fonds d'écran Horizon exclusifs",
             languageSwitchLabel = "Changer de langue",
             dockSizeTitle = "Taille de la barre des favoris",
             dockSizeHint = "Appuyez sur − pour réduire ou + pour agrandir (60% à 130%)",
@@ -376,6 +384,14 @@ object LauncherStrings {
             showPrayerCardToggle = "Afficher la carte Prières / Adhan",
             showCalendarCardToggle = "Afficher la carte Calendrier quotidien",
             showWeatherCardToggle = "Afficher la carte Météo GPS",
+            wallpapersSectionTitle = "Fonds d'écran, Vidéos & Assombrissement",
+            appearanceSectionTitle = "Couleurs, Icônes & Style du verre",
+            accentColorTitle = "Couleur d'accentuation",
+            mainRowTitleLabel = "Titre de la rangée principale",
+            dockStyleTitle = "Style du dock des applications",
+            dockStyleFloating = "Verre flottant",
+            dockStyleFullWidth = "Pleine largeur",
+            dockStyleMinimal = "Minimaliste",
         )
 
         LauncherLanguage.AR -> LocalizedStrings(
@@ -402,8 +418,7 @@ object LauncherStrings {
             timeFormat12 = "12 ساعة",
             showDate = "إظهار التاريخ",
             showGreeting = "إظهار رسالة الترحيب",
-            wallpaperStudio = "استوديو الخلفيات",
-            uiCustomization = "تخصيص الواجهات والمظهر",
+            themeAndWallpaperTitle = "تخصيص الثيم والخلفية",
             gestureShortcuts = "اختصارات الإيماءات السريعة",
             prayerCity = "مدينة الصلاة",
             prayerTimezone = "المنطقة الزمنية",
@@ -467,6 +482,7 @@ object LauncherStrings {
             adhanModeAudio = "أذان صوتي تلقائي",
             aiBarMaxReached = "الحد الأقصى 4 أدوات فقط · احذف أداة أولاً لإضافة أخرى",
             themeCategoryClassic = "ثيمات Horizon العامة",
+            themeCategorySignature = "واجهات ومظاهر المصمم الخاصة",
             themeCategoryClubs = "ثيمات رياضية · أشهر الأندية",
             themeCategoryNational = "ثيمات رياضية · المنتخبات العالمية",
             themeCategoryArab = "ثيمات رياضية · المنتخبات العربية",
@@ -495,7 +511,7 @@ object LauncherStrings {
             tvPowerEnableAccessibilityBtn = "تفعيل عبر إمكانية الوصول (Accessibilité)",
             tvPowerAdminExplanation = "يسمح لزر الإقفال في اللانشر بإطفاء التلفاز ووضعه في وضع الاستعداد فوراً.",
             animatedVideoWallpapersSection = "خلفيات فيديو متحركة",
-            staticWallpapersSection = "خلفيات Horizon والفرق الرياضية",
+            staticWallpapersSection = "خلفيات Horizon الإضافية",
             languageSwitchLabel = "تغيير اللغة",
             dockSizeTitle = "حجم شريط المفضلة",
             dockSizeHint = "اضغط − للتصغير أو + للتكبير (60% إلى 130%)",
@@ -564,6 +580,14 @@ object LauncherStrings {
             showPrayerCardToggle = "إظهار بطاقة الأذان ومواقيت الصلاة",
             showCalendarCardToggle = "إظهار بطاقة الرزنامة اليومية",
             showWeatherCardToggle = "إظهار بطاقة الطقس والموقع",
+            wallpapersSectionTitle = "الخلفيات والفيديو وتعتيم الخلفية",
+            appearanceSectionTitle = "الألوان والأيقونات ومظهر الزجاج",
+            accentColorTitle = "لون التمييز",
+            mainRowTitleLabel = "عنوان الصف الرئيسي",
+            dockStyleTitle = "نمط شريط التطبيقات",
+            dockStyleFloating = "زجاج عائم",
+            dockStyleFullWidth = "عرض كامل",
+            dockStyleMinimal = "بسيط",
         )
 
         LauncherLanguage.EN -> LocalizedStrings(
@@ -590,8 +614,7 @@ object LauncherStrings {
             timeFormat12 = "12-hour",
             showDate = "Show date",
             showGreeting = "Show greeting message",
-            wallpaperStudio = "Horizon Wallpaper Studio",
-            uiCustomization = "UI Customization & Themes",
+            themeAndWallpaperTitle = "Theme & Wallpaper Personalization",
             gestureShortcuts = "Quick gesture shortcuts",
             prayerCity = "Prayer city",
             prayerTimezone = "Prayer timezone",
@@ -655,6 +678,7 @@ object LauncherStrings {
             adhanModeAudio = "Auto Adhan Audio",
             aiBarMaxReached = "Maximum 4 AI tools in the bar · Remove one first to add another",
             themeCategoryClassic = "Horizon Classic Themes",
+            themeCategorySignature = "Signature Horizon Skins",
             themeCategoryClubs = "Sports Themes · Top Clubs",
             themeCategoryNational = "Sports Themes · National Teams",
             themeCategoryArab = "Sports Themes · Arab National Teams",
@@ -683,7 +707,7 @@ object LauncherStrings {
             tvPowerEnableAccessibilityBtn = "Enable via Accessibility",
             tvPowerAdminExplanation = "Allows the Horizon launcher power button to turn off or sleep your TV immediately.",
             animatedVideoWallpapersSection = "Animated Video Wallpapers",
-            staticWallpapersSection = "Horizon & Sports Wallpapers",
+            staticWallpapersSection = "Exclusive Horizon Wallpapers",
             languageSwitchLabel = "Switch language",
             dockSizeTitle = "Favorites bar size",
             dockSizeHint = "Press − to shrink or + to enlarge (60% to 130%)",
@@ -752,6 +776,14 @@ object LauncherStrings {
             showPrayerCardToggle = "Show Prayer / Adhan card",
             showCalendarCardToggle = "Show Daily Calendar card",
             showWeatherCardToggle = "Show GPS Weather card",
+            wallpapersSectionTitle = "Wallpapers, Video & Dimming",
+            appearanceSectionTitle = "Colors, Icons & Glass Style",
+            accentColorTitle = "Accent color",
+            mainRowTitleLabel = "Main row title",
+            dockStyleTitle = "Favorites dock style",
+            dockStyleFloating = "Floating glass",
+            dockStyleFullWidth = "Full width",
+            dockStyleMinimal = "Minimalist",
         )
     }
 
@@ -790,8 +822,7 @@ object LauncherStrings {
             GestureAction.OPEN_WEATHER -> "Ouvrir la météo locale"
             GestureAction.OPEN_PRAYER -> "Ouvrir les prières & Adhan"
             GestureAction.OPEN_CALENDAR -> "Ouvrir le calendrier quotidien"
-            GestureAction.OPEN_WALLPAPER_STUDIO -> "Ouvrir le Studio de fonds d'écran"
-            GestureAction.OPEN_UI_CUSTOMIZER -> "Personnaliser l'interface"
+            GestureAction.OPEN_THEME_CUSTOMIZER -> "Personnalisation Thème & Fond d'écran"
             GestureAction.TOGGLE_ADHAN_AUDIO -> "Tester / Arrêter l'Adhan"
             GestureAction.REFRESH_GPS_DATA -> "Actualiser GPS (Météo & Prières)"
             GestureAction.NONE -> "Désactivé"
@@ -803,8 +834,7 @@ object LauncherStrings {
             GestureAction.OPEN_WEATHER -> "فتح أحوال الطقس"
             GestureAction.OPEN_PRAYER -> "فتح مواقيت الصلاة والأذان"
             GestureAction.OPEN_CALENDAR -> "فتح الرزنامة اليومية"
-            GestureAction.OPEN_WALLPAPER_STUDIO -> "فتح استوديو الخلفيات"
-            GestureAction.OPEN_UI_CUSTOMIZER -> "تخصيص الواجهة"
+            GestureAction.OPEN_THEME_CUSTOMIZER -> "تخصيص الثيم والخلفية"
             GestureAction.TOGGLE_ADHAN_AUDIO -> "تشغيل / إيقاف الأذان"
             GestureAction.REFRESH_GPS_DATA -> "تحديث الموقع والطقس"
             GestureAction.NONE -> "معطّل"
@@ -816,8 +846,7 @@ object LauncherStrings {
             GestureAction.OPEN_WEATHER -> "Open Local Weather"
             GestureAction.OPEN_PRAYER -> "Open Prayer Times & Adhan"
             GestureAction.OPEN_CALENDAR -> "Open Daily Calendar"
-            GestureAction.OPEN_WALLPAPER_STUDIO -> "Open Wallpaper Studio"
-            GestureAction.OPEN_UI_CUSTOMIZER -> "Customize UI & Theme"
+            GestureAction.OPEN_THEME_CUSTOMIZER -> "Theme & Wallpaper Personalization"
             GestureAction.TOGGLE_ADHAN_AUDIO -> "Play / Stop Adhan"
             GestureAction.REFRESH_GPS_DATA -> "Refresh GPS Weather & Prayer"
             GestureAction.NONE -> "Disabled"

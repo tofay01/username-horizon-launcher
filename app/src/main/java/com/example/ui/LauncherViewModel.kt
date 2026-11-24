@@ -490,8 +490,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun navigateBack(): Boolean {
         return if (destinationFlow.value != LauncherDestination.HOME) {
             destinationFlow.value = when (destinationFlow.value) {
-                LauncherDestination.WALLPAPER_STUDIO,
-                LauncherDestination.UI_CUSTOMIZER,
+                LauncherDestination.THEME_AND_WALLPAPER,
                 LauncherDestination.GESTURE_SHORTCUTS -> LauncherDestination.LAUNCHER_SETTINGS
                 else -> LauncherDestination.HOME
             }
@@ -868,8 +867,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             GestureAction.OPEN_WEATHER -> navigateTo(LauncherDestination.WEATHER_DETAIL)
             GestureAction.OPEN_PRAYER -> navigateTo(LauncherDestination.PRAYER_AND_ADHAN)
             GestureAction.OPEN_CALENDAR -> navigateTo(LauncherDestination.CALENDAR_DETAIL)
-            GestureAction.OPEN_WALLPAPER_STUDIO -> navigateTo(LauncherDestination.WALLPAPER_STUDIO)
-            GestureAction.OPEN_UI_CUSTOMIZER -> navigateTo(LauncherDestination.UI_CUSTOMIZER)
+            GestureAction.OPEN_THEME_CUSTOMIZER -> navigateTo(LauncherDestination.THEME_AND_WALLPAPER)
             GestureAction.TOGGLE_ADHAN_AUDIO -> testOrStopAdhan()
             GestureAction.REFRESH_GPS_DATA -> {
                 if (locationWeatherRepo.hasLocationPermission()) {

@@ -122,6 +122,7 @@ import com.example.ui.components.ConcentricOrbitBackdrop
 import com.example.ui.components.ContrastText
 import com.example.ui.components.FocusSoundPlayer
 import com.example.ui.components.FuturisticDockContainer
+import com.example.ui.components.LauncherThemeFrameOverlay
 import com.example.ui.components.LocalNavigationSoundEnabled
 import com.example.ui.components.LocalTvFocusEnabled
 import com.example.ui.components.OrbitAllAppsButton
@@ -166,6 +167,7 @@ fun HomeScreen(
     val settings = state.settings
     val strings = LauncherStrings.get(settings.language)
     val accent = settings.accentColor
+    val rimAccent = settings.rimAccentColor
 
     var dragX by remember { mutableFloatStateOf(0f) }
     var dragY by remember { mutableFloatStateOf(0f) }
@@ -183,6 +185,17 @@ fun HomeScreen(
     }
 
     CompositionLocalProvider(LocalTvFocusEnabled provides isHomeActive) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            BoxWithConstraints(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                LauncherThemeFrameOverlay(
+                    skinStyle = settings.themePreset.skinStyle,
+                    rimColor = rimAccent,
+                    isCompact = maxWidth < 640.dp,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
@@ -627,6 +640,7 @@ fun HomeScreen(
                                     accent = accent,
                                     enhancedContrast = settings.enhancedContrast,
                                     isCompact = isCompactWidth,
+                                    rimColor = rimAccent,
                                 )
                             }
                             OrbitLanguageCycleButton(
@@ -637,6 +651,7 @@ fun HomeScreen(
                                 contentDescription = strings.languageSwitchLabel,
                                 isCompact = isCompactWidth,
                                 onClick = onCycleLanguage,
+                                rimColor = rimAccent,
                             )
                         }
 
@@ -673,6 +688,7 @@ fun HomeScreen(
                             surfaceColor = Color(settings.themePreset.surfaceHex),
                             glassAlpha = pillGlassAlpha,
                             modifier = Modifier.matchParentSize(),
+                            rimColor = rimAccent,
                         )
 
                         Column(
@@ -806,6 +822,7 @@ fun HomeScreen(
                                 crestHeight = crestHeightDp,
                                 cornerRadius = (settings.cardCornerRadiusDp + 4).dp,
                                 modifier = Modifier.fillMaxWidth(dockWidthFraction).testTag("home_favorites_dock"),
+                                rimColor = rimAccent,
                             ) {
                                 dockContent()
                             }
@@ -944,6 +961,7 @@ fun HomeScreen(
                     onLaunchApp = onLaunchApp,
                 )
             }
+        }
         }
     }
 }
@@ -1141,6 +1159,7 @@ private fun WeatherWidgetCard(
         cornerRadius = 18.dp,
         isLeftPrayerShape = false,
         modifier = modifier,
+        rimAccentColor = settings.rimAccentColor,
     ) { isFocused ->
         Column(
             modifier = Modifier
@@ -1368,6 +1387,7 @@ private fun PrayerWidgetCard(
         cornerRadius = 18.dp,
         isLeftPrayerShape = true,
         modifier = modifier,
+        rimAccentColor = settings.rimAccentColor,
     ) { isFocused ->
         Column(
             horizontalAlignment = Alignment.Start,
@@ -1510,6 +1530,7 @@ private fun CalendarWidgetCard(
         cornerRadius = 18.dp,
         isLeftPrayerShape = true,
         modifier = modifier,
+        rimAccentColor = settings.rimAccentColor,
     ) { isFocused ->
         Column(
             horizontalAlignment = Alignment.Start,
@@ -1673,10 +1694,11 @@ private fun HorizontalAiToolsBar(
         NetworkType.OFFLINE -> Icons.Rounded.WifiOff
     }
 
+    val rimAccent = settings.rimAccentColor
     Surface(
         shape = RoundedCornerShape(22.dp),
         color = surfaceColor.copy(alpha = glassAlpha),
-        border = BorderStroke(1.dp, accent.copy(alpha = 0.45f)),
+        border = BorderStroke(1.1.dp, rimAccent.copy(alpha = 0.58f)),
         shadowElevation = if (glassAlpha < 0.08f) 0.dp else 4.dp,
         modifier = modifier
             .height(barHeight)

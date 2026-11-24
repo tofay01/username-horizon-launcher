@@ -401,7 +401,7 @@ class HomeScreenTilesTest {
     }
 
     @Test
-    fun wallpaperStudio_showsImageVideoFilePickers_andActiveVideoWallpaperLayerRendersSafely() {
+    fun themeAndWallpaper_showsImageVideoFilePickers_andActiveVideoWallpaperLayerRendersSafely() {
         var latestSettings = LauncherSettings(
             wallpaperId = "custom",
             customWallpaperUri = "file:///nonexistent_sample.mp4",
@@ -412,21 +412,22 @@ class HomeScreenTilesTest {
         composeRule.setContent {
             HorizonLauncherTheme {
                 com.example.ui.components.LauncherWallpaperLayer(settings = latestSettings)
-                com.example.ui.screens.WallpaperStudioScreen(
+                com.example.ui.screens.ThemeAndWallpaperScreen(
                     state = state,
                     onBack = {},
                     onUpdateSettings = { transform -> latestSettings = transform(latestSettings) },
+                    onApplyThemePreset = {},
                     onSelectCustomWallpaper = { _, _ -> },
                 )
             }
         }
 
         composeRule.waitForIdle()
-        composeRule.onNodeWithTag("pick_wallpaper_image_btn").assertIsDisplayed()
-        composeRule.onNodeWithTag("pick_wallpaper_video_btn").assertIsDisplayed()
-        composeRule.onNodeWithTag("browse_wallpaper_files_btn").assertIsDisplayed()
-        composeRule.onNodeWithTag("custom_wallpaper_active_banner").assertIsDisplayed()
-        composeRule.onNodeWithTag("wallpaper_card_video_earth_space").assertExists().performClick()
+        composeRule.onNodeWithTag("pick_wallpaper_image_btn").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag("pick_wallpaper_video_btn").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag("browse_wallpaper_files_btn").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag("custom_wallpaper_active_banner").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag("wallpaper_card_video_earth_space").performScrollTo().performClick()
         assertEquals("video_earth_space", latestSettings.wallpaperId)
         assertEquals(null, latestSettings.customWallpaperUri)
         assertEquals(false, latestSettings.customWallpaperIsVideo)
@@ -434,7 +435,15 @@ class HomeScreenTilesTest {
         composeRule.onNodeWithTag("wallpaper_card_video_crimson_nebula").assertExists()
         composeRule.onNodeWithTag("wallpaper_card_video_cobalt_fractal").assertExists()
         composeRule.onNodeWithTag("wallpaper_card_video_violet_nebula").assertExists()
-        composeRule.onNodeWithTag("clear_custom_wallpaper_btn").assertIsDisplayed().performClick()
+        // Verify duplicate ThemePreset wallpapers were removed from the static wallpaper grid
+        assertTrue(composeRule.onAllNodesWithTag("wallpaper_card_sport_real_madrid").fetchSemanticsNodes().isEmpty())
+        assertTrue(composeRule.onAllNodesWithTag("wallpaper_card_flag_algeria").fetchSemanticsNodes().isEmpty())
+        assertTrue(composeRule.onAllNodesWithTag("wallpaper_card_anime_grendizer").fetchSemanticsNodes().isEmpty())
+        // Exclusive Horizon & bonus wallpapers remain present
+        composeRule.onNodeWithTag("wallpaper_card_earth").assertExists()
+        composeRule.onNodeWithTag("wallpaper_card_sport_algeria_fennecs").assertExists()
+        composeRule.onNodeWithTag("wallpaper_card_sport_brazil_light").assertExists()
+        composeRule.onNodeWithTag("clear_custom_wallpaper_btn").performScrollTo().assertIsDisplayed().performClick()
         assertEquals(null, latestSettings.customWallpaperUri)
         assertEquals(false, latestSettings.customWallpaperIsVideo)
     }
@@ -746,11 +755,12 @@ class HomeScreenTilesTest {
                         wallpaperId = "sport_algeria",
                     )
                 )
-                com.example.ui.screens.UiCustomizerScreen(
+                com.example.ui.screens.ThemeAndWallpaperScreen(
                     state = state,
                     onBack = {},
                     onUpdateSettings = {},
                     onApplyThemePreset = { appliedPreset = it },
+                    onSelectCustomWallpaper = { _, _ -> },
                 )
             }
         }
@@ -935,13 +945,14 @@ class HomeScreenTilesTest {
         )
         composeRule.setContent {
             HorizonLauncherTheme {
-                com.example.ui.screens.UiCustomizerScreen(
+                com.example.ui.screens.ThemeAndWallpaperScreen(
                     state = LauncherUiState(settings = settingsHolder.value),
                     onBack = {},
                     onUpdateSettings = { transform ->
                         settingsHolder.value = transform(settingsHolder.value)
                     },
                     onApplyThemePreset = {},
+                    onSelectCustomWallpaper = { _, _ -> },
                 )
             }
         }
@@ -1216,10 +1227,11 @@ class HomeScreenTilesTest {
         )
         composeRule.setContent {
             HorizonLauncherTheme {
-                com.example.ui.screens.WallpaperStudioScreen(
+                com.example.ui.screens.ThemeAndWallpaperScreen(
                     state = LauncherUiState(settings = settingsHolder.value),
                     onBack = {},
                     onUpdateSettings = { transform -> settingsHolder.value = transform(settingsHolder.value) },
+                    onApplyThemePreset = {},
                     onSelectCustomWallpaper = { _, _ -> },
                 )
             }
@@ -1335,11 +1347,12 @@ class HomeScreenTilesTest {
         val state = LauncherUiState(settings = LauncherSettings(language = LauncherLanguage.FR))
         composeRule.setContent {
             HorizonLauncherTheme {
-                com.example.ui.screens.UiCustomizerScreen(
+                com.example.ui.screens.ThemeAndWallpaperScreen(
                     state = state,
                     onBack = {},
                     onUpdateSettings = {},
                     onApplyThemePreset = {},
+                    onSelectCustomWallpaper = { _, _ -> },
                 )
             }
         }
@@ -1981,11 +1994,12 @@ class HomeScreenTilesTest {
         composeRule.setContent {
             HorizonLauncherTheme {
                 com.example.ui.components.LauncherWallpaperLayer(settings = state.settings)
-                com.example.ui.screens.UiCustomizerScreen(
+                com.example.ui.screens.ThemeAndWallpaperScreen(
                     state = state,
                     onBack = {},
                     onUpdateSettings = {},
                     onApplyThemePreset = { appliedPreset = it },
+                    onSelectCustomWallpaper = { _, _ -> },
                 )
             }
         }
@@ -2015,6 +2029,104 @@ class HomeScreenTilesTest {
             .performClick()
         assertEquals(com.example.model.ThemePreset.ANIME_GRENDIZER, appliedPreset)
     }
+
+    @Test
+    fun signatureSkins_selectCleanly_andPreserveExactHomeCardGeometry() {
+        val sampleApps = (1..6).map { idx ->
+            AppItem("com.test.skin$idx", "App $idx", "MainActivity", ColorDrawable(AndroidColor.CYAN))
+        }
+        val activePresetHolder = androidx.compose.runtime.mutableStateOf(com.example.model.ThemePreset.COSMOS_BLUE)
+        val showCustomizer = androidx.compose.runtime.mutableStateOf(false)
+
+        composeRule.setContent {
+            HorizonLauncherTheme {
+                val activeSettings = LauncherSettings(
+                    language = LauncherLanguage.FR,
+                    appsPerRow = 6,
+                    themePreset = activePresetHolder.value,
+                    accentColorHex = activePresetHolder.value.accentHex,
+                    wallpaperId = activePresetHolder.value.defaultWallpaperId,
+                )
+                if (showCustomizer.value) {
+                    com.example.ui.screens.ThemeAndWallpaperScreen(
+                        state = LauncherUiState(settings = activeSettings),
+                        onBack = {},
+                        onUpdateSettings = {},
+                        onApplyThemePreset = { activePresetHolder.value = it },
+                        onSelectCustomWallpaper = { _, _ -> },
+                    )
+                } else {
+                    HomeScreen(
+                        state = LauncherUiState(
+                            settings = activeSettings,
+                            destination = LauncherDestination.HOME,
+                            allApps = sampleApps,
+                            favoriteApps = sampleApps,
+                            visibleAppsOrdered = sampleApps,
+                            nextPrayer = NextPrayerInfo(PrayerKey.DHUHR, "12:26", 3, 36),
+                            weather = WeatherData("Mons Centre", 11.0, 9.0, 61, 14.0, 82, 13.0, 10.0, isDay = true, isGpsSynced = true),
+                        ),
+                        isHomeActive = true,
+                        onNavigate = {},
+                        onLaunchApp = {},
+                        onOpenContextApp = {},
+                        onToggleFavorite = {},
+                        onMoveFavorite = { _, _ -> },
+                        onHideApp = {},
+                        onOpenAppInfo = {},
+                        onOpenNetworkSettings = {},
+                        onExecuteGesture = {},
+                        onSelectHdmiSource = {},
+                        onStopAdhan = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.waitForIdle()
+        val baselinePrayer = composeRule.onNodeWithTag("home_prayer_card").fetchSemanticsNode().boundsInRoot
+        val baselineWeather = composeRule.onNodeWithTag("home_weather_card").fetchSemanticsNode().boundsInRoot
+        val baselineClock = composeRule.onNodeWithTag("home_clock_header").fetchSemanticsNode().boundsInRoot
+        val baselineDock = composeRule.onNodeWithTag("home_favorites_dock").fetchSemanticsNode().boundsInRoot
+
+        val signatureThemes = listOf(
+            com.example.model.ThemePreset.SILVER_EARTH,
+            com.example.model.ThemePreset.COFFEE_GOLD,
+            com.example.model.ThemePreset.ZELLIGE_ROYAL,
+            com.example.model.ThemePreset.PHARAOH_GOLD,
+            com.example.model.ThemePreset.EGYPT,
+            com.example.model.ThemePreset.ALGERIA,
+            com.example.model.ThemePreset.MAN_CITY,
+            com.example.model.ThemePreset.BARCELONA,
+            com.example.model.ThemePreset.REAL_MADRID,
+        )
+
+        signatureThemes.forEach { preset ->
+            assertTrue(
+                "Expected valid wallpaper drawable for ${preset.id}",
+                com.example.ui.components.wallpaperDrawableRes(preset.defaultWallpaperId) != null,
+            )
+            activePresetHolder.value = preset
+            composeRule.waitForIdle()
+
+            val prayer = composeRule.onNodeWithTag("home_prayer_card").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+            val weather = composeRule.onNodeWithTag("home_weather_card").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+            val clock = composeRule.onNodeWithTag("home_clock_header").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+            val dock = composeRule.onNodeWithTag("home_favorites_dock").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+
+            assertEquals("Prayer bounds must remain identical for ${preset.id}", baselinePrayer, prayer)
+            assertEquals("Weather bounds must remain identical for ${preset.id}", baselineWeather, weather)
+            assertEquals("Clock bounds must remain identical for ${preset.id}", baselineClock, clock)
+            assertEquals("Dock bounds must remain identical for ${preset.id}", baselineDock, dock)
+        }
+
+        showCustomizer.value = true
+        composeRule.waitForIdle()
+        listOf("silver_earth", "coffee_gold", "zellige_royal", "pharaoh_gold").forEach { id ->
+            composeRule.onNodeWithTag("theme_preset_$id").assertExists()
+        }
+        composeRule.onNodeWithTag("theme_preset_zellige_royal").performClick()
+        composeRule.waitForIdle()
+        assertEquals(com.example.model.ThemePreset.ZELLIGE_ROYAL, activePresetHolder.value)
+    }
 }
-
-

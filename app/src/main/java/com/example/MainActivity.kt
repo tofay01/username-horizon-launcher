@@ -57,9 +57,8 @@ import com.example.ui.screens.PrayerAndAdhanScreen
 import com.example.ui.screens.ReorderAppsScreen
 import com.example.ui.screens.SearchAppsScreen
 import com.example.ui.screens.SettingsMenuOverlay
+import com.example.ui.screens.ThemeAndWallpaperScreen
 import com.example.ui.screens.TvPowerSetupDialog
-import com.example.ui.screens.UiCustomizerScreen
-import com.example.ui.screens.WallpaperStudioScreen
 import com.example.ui.screens.WeatherDetailScreen
 import com.example.ui.screens.GitHubUpdateDialogHost
 import com.example.ui.theme.HorizonLauncherTheme
@@ -295,17 +294,12 @@ fun HorizonLauncherRoot(
                                 onUpdateSettings = viewModel::updateSettings,
                                 onRequestDefaultHome = requestDefaultHome,
                             )
-                            LauncherDestination.WALLPAPER_STUDIO -> WallpaperStudioScreen(
-                                state = state,
-                                onBack = { viewModel.navigateBack() },
-                                onUpdateSettings = viewModel::updateSettings,
-                                onSelectCustomWallpaper = viewModel::setCustomWallpaper,
-                            )
-                            LauncherDestination.UI_CUSTOMIZER -> UiCustomizerScreen(
+                            LauncherDestination.THEME_AND_WALLPAPER -> ThemeAndWallpaperScreen(
                                 state = state,
                                 onBack = { viewModel.navigateBack() },
                                 onUpdateSettings = viewModel::updateSettings,
                                 onApplyThemePreset = viewModel::applyThemePreset,
+                                onSelectCustomWallpaper = viewModel::setCustomWallpaper,
                             )
                             LauncherDestination.GESTURE_SHORTCUTS -> GestureShortcutsScreen(
                                 state = state,

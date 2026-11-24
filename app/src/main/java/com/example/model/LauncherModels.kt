@@ -17,12 +17,26 @@ enum class LauncherLanguage(val code: String, val displayName: String, val circl
 
 enum class ThemeCategory {
     CLASSIC,
+    SIGNATURE_SKINS,
     SPORTS_CLUBS,
     SPORTS_NATIONAL,
     SPORTS_ARAB,
     COUNTRY_FLAGS,
     CINEMA,
     ANIME,
+}
+
+enum class ThemeSkinStyle {
+    DEFAULT,
+    SILVER_CHROME,
+    COFFEE_GOLD,
+    ZELLIGE_ALGERIAN,
+    PHARAOH_GOLD,
+    EGYPT_PHARAOHS,
+    ALGERIA_FENNECS,
+    MAN_CITY_ETIHAD,
+    BARCA_BLAUGRANA,
+    REAL_MADRID_ROYAL,
 }
 
 enum class ThemePreset(
@@ -37,6 +51,8 @@ enum class ThemePreset(
     val secondaryHex: Long = accentHex,
     val tertiaryHex: Long = 0xFFFFFFFF,
     val badgeCode: String = "HRZ",
+    val rimHex: Long = accentHex,
+    val skinStyle: ThemeSkinStyle = ThemeSkinStyle.DEFAULT,
 ) {
     COSMOS_BLUE(
         id = "cosmos_blue",
@@ -89,6 +105,68 @@ enum class ThemePreset(
         badgeCode = "OLD",
     ),
 
+    // واجهات ومظاهر Horizon الخاصة / Interfaces Signature Horizon
+    SILVER_EARTH(
+        id = "silver_earth",
+        labelFr = "Futuriste Argenté",
+        labelAr = "فضي مستقبلي",
+        labelEn = "Silver Chrome Earth",
+        accentHex = 0xFFE2E8F0,
+        surfaceHex = 0xFF141B26,
+        defaultWallpaperId = "earth_silver",
+        category = ThemeCategory.SIGNATURE_SKINS,
+        secondaryHex = 0xFFCBD5E1,
+        tertiaryHex = 0xFFFFFFFF,
+        badgeCode = "SLV",
+        rimHex = 0xFFF1F5F9,
+        skinStyle = ThemeSkinStyle.SILVER_CHROME,
+    ),
+    COFFEE_GOLD(
+        id = "coffee_gold",
+        labelFr = "Élégant Café & Or",
+        labelAr = "قهوة وذهب فاخر",
+        labelEn = "Espresso & Gold",
+        accentHex = 0xFFFBBF24,
+        surfaceHex = 0xFF24140B,
+        defaultWallpaperId = "earth_gold",
+        category = ThemeCategory.SIGNATURE_SKINS,
+        secondaryHex = 0xFFF59E0B,
+        tertiaryHex = 0xFFFEF3C7,
+        badgeCode = "GLD",
+        rimHex = 0xFFF59E0B,
+        skinStyle = ThemeSkinStyle.COFFEE_GOLD,
+    ),
+    ZELLIGE_ROYAL(
+        id = "zellige_royal",
+        labelFr = "Zellige Algérien",
+        labelAr = "زليج جزائري فاخر",
+        labelEn = "Algerian Zellige",
+        accentHex = 0xFFFBBF24,
+        surfaceHex = 0xFF0A2422,
+        defaultWallpaperId = "earth_zellige",
+        category = ThemeCategory.SIGNATURE_SKINS,
+        secondaryHex = 0xFF10B981,
+        tertiaryHex = 0xFF06B6D4,
+        badgeCode = "ZLG",
+        rimHex = 0xFFFACC15,
+        skinStyle = ThemeSkinStyle.ZELLIGE_ALGERIAN,
+    ),
+    PHARAOH_GOLD(
+        id = "pharaoh_gold",
+        labelFr = "Égypte Dorée",
+        labelAr = "مصر الفرعونية الذهبية",
+        labelEn = "Golden Pharaoh",
+        accentHex = 0xFFFACC15,
+        surfaceHex = 0xFF23180A,
+        defaultWallpaperId = "earth_pharaoh",
+        category = ThemeCategory.SIGNATURE_SKINS,
+        secondaryHex = 0xFFD97706,
+        tertiaryHex = 0xFFFEF08A,
+        badgeCode = "PHR",
+        rimHex = 0xFFFACC15,
+        skinStyle = ThemeSkinStyle.PHARAOH_GOLD,
+    ),
+
     // أشهر الأندية العالمية / Clubs célèbres
     REAL_MADRID(
         id = "real_madrid",
@@ -102,6 +180,8 @@ enum class ThemePreset(
         secondaryHex = 0xFFF8FAFC,
         tertiaryHex = 0xFF2563EB,
         badgeCode = "RMA",
+        rimHex = 0xFFFACC15,
+        skinStyle = ThemeSkinStyle.REAL_MADRID_ROYAL,
     ),
     BARCELONA(
         id = "barcelona",
@@ -115,6 +195,8 @@ enum class ThemePreset(
         secondaryHex = 0xFFA50044,
         tertiaryHex = 0xFFFACC15,
         badgeCode = "FCB",
+        rimHex = 0xFFFACC15,
+        skinStyle = ThemeSkinStyle.BARCA_BLAUGRANA,
     ),
     MAN_CITY(
         id = "man_city",
@@ -128,6 +210,8 @@ enum class ThemePreset(
         secondaryHex = 0xFF38BDF8,
         tertiaryHex = 0xFFFACC15,
         badgeCode = "MCI",
+        rimHex = 0xFF93C5FD,
+        skinStyle = ThemeSkinStyle.MAN_CITY_ETIHAD,
     ),
     PSG(
         id = "psg",
@@ -210,6 +294,8 @@ enum class ThemePreset(
         secondaryHex = 0xFFCE1126,
         tertiaryHex = 0xFFF8FAFC,
         badgeCode = "EGY",
+        rimHex = 0xFFFACC15,
+        skinStyle = ThemeSkinStyle.EGYPT_PHARAOHS,
     ),
     ALGERIA(
         id = "algeria",
@@ -223,6 +309,8 @@ enum class ThemePreset(
         secondaryHex = 0xFFF8FAFC,
         tertiaryHex = 0xFFD21034,
         badgeCode = "DZA",
+        rimHex = 0xFFFACC15,
+        skinStyle = ThemeSkinStyle.ALGERIA_FENNECS,
     ),
     SAUDI_ARABIA(
         id = "saudi_arabia",
@@ -485,8 +573,7 @@ enum class GestureAction(val key: String) {
     OPEN_WEATHER("open_weather"),
     OPEN_PRAYER("open_prayer"),
     OPEN_CALENDAR("open_calendar"),
-    OPEN_WALLPAPER_STUDIO("open_wallpaper_studio"),
-    OPEN_UI_CUSTOMIZER("open_ui_customizer"),
+    OPEN_THEME_CUSTOMIZER("open_ui_customizer"),
     TOGGLE_ADHAN_AUDIO("toggle_adhan_audio"),
     REFRESH_GPS_DATA("refresh_gps_data"),
     NONE("none"),
@@ -750,10 +837,17 @@ data class LauncherSettings(
         GestureType.SWIPE_LEFT to GestureAction.OPEN_PRAYER,
         GestureType.SWIPE_RIGHT to GestureAction.OPEN_WEATHER,
         GestureType.DOUBLE_TAP to GestureAction.OPEN_SETTINGS,
-        GestureType.LONG_PRESS to GestureAction.OPEN_WALLPAPER_STUDIO,
+        GestureType.LONG_PRESS to GestureAction.OPEN_THEME_CUSTOMIZER,
     ),
 ) {
     val accentColor: Color get() = Color(accentColorHex)
+
+    val rimAccentColor: Color
+        get() = if (accentColorHex == themePreset.accentHex) {
+            Color(themePreset.rimHex)
+        } else {
+            accentColor
+        }
 }
 
 enum class LauncherDestination {
@@ -766,8 +860,7 @@ enum class LauncherDestination {
     SEARCH_APPS,
     HIDDEN_APPS,
     ABOUT_SUPPORT,
-    WALLPAPER_STUDIO,
-    UI_CUSTOMIZER,
+    THEME_AND_WALLPAPER,
     GESTURE_SHORTCUTS,
     PRAYER_AND_ADHAN,
     CALENDAR_DETAIL,

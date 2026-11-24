@@ -81,12 +81,13 @@ fun OrbitGreetingPill(
     enhancedContrast: Boolean,
     isCompact: Boolean,
     modifier: Modifier = Modifier,
+    rimColor: Color = accent,
 ) {
     val barHeight = if (isCompact) 36.dp else 42.dp
     Surface(
         shape = RoundedCornerShape(50),
         color = Color(surfaceHex).copy(alpha = glassAlpha.coerceIn(0.24f, 0.88f)),
-        border = BorderStroke(1.1.dp, accent.copy(alpha = 0.62f)),
+        border = BorderStroke(1.2.dp, rimColor.copy(alpha = 0.72f)),
         shadowElevation = if (glassAlpha < 0.08f) 0.dp else 4.dp,
         modifier = modifier.height(barHeight),
     ) {
@@ -121,15 +122,16 @@ fun OrbitLanguageCycleButton(
     isCompact: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    rimColor: Color = accent,
 ) {
     val circleSize = if (isCompact) 36.dp else 42.dp
     TvFocusableSurface(
         onClick = onClick,
-        accentColor = accent,
+        accentColor = rimColor,
         shape = CircleShape,
         baseColor = Color(surfaceHex).copy(alpha = (glassAlpha + 0.08f).coerceIn(0.28f, 0.90f)),
-        focusedColor = accent.copy(alpha = 0.48f),
-        baseBorderColor = accent.copy(alpha = 0.65f),
+        focusedColor = rimColor.copy(alpha = 0.48f),
+        baseBorderColor = rimColor.copy(alpha = 0.72f),
         modifier = modifier
             .size(circleSize)
             .semantics { this.contentDescription = contentDescription }
@@ -162,6 +164,7 @@ fun ConcentricOrbitBackdrop(
     surfaceColor: Color,
     glassAlpha: Float,
     modifier: Modifier = Modifier,
+    rimColor: Color = accent,
 ) {
     Canvas(modifier = modifier) {
         val w = size.width
@@ -182,7 +185,7 @@ fun ConcentricOrbitBackdrop(
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    accent.copy(alpha = 0.22f * fillScale),
+                    rimColor.copy(alpha = 0.22f * fillScale),
                     surfaceColor.copy(alpha = 0.14f * fillScale),
                     Color.Transparent,
                 ),
@@ -195,7 +198,7 @@ fun ConcentricOrbitBackdrop(
 
         // Outer orbit ring stroke
         drawCircle(
-            color = accent.copy(alpha = 0.24f),
+            color = rimColor.copy(alpha = 0.24f),
             radius = outerR,
             center = Offset(cx, cy),
             style = Stroke(width = 4.dp.toPx()),
@@ -204,7 +207,7 @@ fun ConcentricOrbitBackdrop(
             brush = Brush.verticalGradient(
                 colors = listOf(
                     PureWhite.copy(alpha = 0.55f),
-                    accent.copy(alpha = 0.42f),
+                    rimColor.copy(alpha = 0.45f),
                     accent.copy(alpha = 0.10f),
                 ),
                 startY = cy - outerR,
@@ -219,8 +222,8 @@ fun ConcentricOrbitBackdrop(
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    Color(0xFF0A245E).copy(alpha = 0.34f * fillScale),
-                    Color(0xFF0D327A).copy(alpha = 0.20f * fillScale),
+                    surfaceColor.copy(alpha = 0.36f * fillScale),
+                    surfaceColor.copy(alpha = 0.18f * fillScale),
                     Color.Transparent,
                 ),
                 center = Offset(cx, cy),
@@ -230,7 +233,7 @@ fun ConcentricOrbitBackdrop(
             center = Offset(cx, cy),
         )
         drawCircle(
-            color = accent.copy(alpha = 0.28f),
+            color = rimColor.copy(alpha = 0.30f),
             radius = middleR,
             center = Offset(cx, cy),
             style = Stroke(width = 5.dp.toPx()),
@@ -239,7 +242,7 @@ fun ConcentricOrbitBackdrop(
             brush = Brush.verticalGradient(
                 colors = listOf(
                     PureWhite.copy(alpha = 0.85f),
-                    accent.copy(alpha = 0.72f),
+                    rimColor.copy(alpha = 0.76f),
                     accent.copy(alpha = 0.18f),
                 ),
                 startY = cy - middleR,
@@ -250,12 +253,12 @@ fun ConcentricOrbitBackdrop(
             style = Stroke(width = 1.6.dp.toPx()),
         )
 
-        // Inner core dark-cobalt circle cradling the All Apps circular icon
+        // Inner core tinted circle cradling the All Apps circular icon
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    Color(0xFF04102E).copy(alpha = 0.56f * fillScale),
-                    Color(0xFF082056).copy(alpha = 0.38f * fillScale),
+                    surfaceColor.copy(alpha = 0.64f * fillScale),
+                    surfaceColor.copy(alpha = 0.40f * fillScale),
                 ),
                 center = Offset(cx, cy),
                 radius = innerR,
@@ -267,7 +270,7 @@ fun ConcentricOrbitBackdrop(
             brush = Brush.verticalGradient(
                 colors = listOf(
                     PureWhite.copy(alpha = 0.65f),
-                    accent.copy(alpha = 0.48f),
+                    rimColor.copy(alpha = 0.52f),
                     accent.copy(alpha = 0.14f),
                 ),
                 startY = cy - innerR,
@@ -378,6 +381,7 @@ fun OrbitContouredCardSurface(
     cornerRadius: Dp,
     isLeftPrayerShape: Boolean,
     modifier: Modifier = Modifier,
+    rimAccentColor: Color = accentColor,
     content: @Composable (isFocused: Boolean) -> Unit,
 ) {
     val tvFocusEnabled = LocalTvFocusEnabled.current
@@ -408,7 +412,7 @@ fun OrbitContouredCardSurface(
         label = "orbitCardScale",
     )
     val rimColor by animateColorAsState(
-        targetValue = if (highlighted) PureWhite else accentColor.copy(alpha = 0.85f),
+        targetValue = if (highlighted) PureWhite else rimAccentColor.copy(alpha = 0.88f),
         animationSpec = tween(durationMillis = 100),
         label = "orbitCardRim",
     )
@@ -447,7 +451,7 @@ fun OrbitContouredCardSurface(
                     brush = Brush.verticalGradient(
                         colors = if (highlighted) {
                             listOf(
-                                accentColor.copy(alpha = 0.38f),
+                                rimAccentColor.copy(alpha = 0.36f),
                                 surfaceColor.copy(alpha = (effectiveAlpha + 0.16f).coerceIn(0.32f, 0.92f)),
                             )
                         } else {
@@ -462,7 +466,7 @@ fun OrbitContouredCardSurface(
                     path = path,
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            accentColor.copy(alpha = if (highlighted) 0.24f else 0.12f),
+                            rimAccentColor.copy(alpha = if (highlighted) 0.24f else 0.13f),
                             Color.Transparent,
                         ),
                         center = Offset(if (isLeftPrayerShape) size.width else 0f, size.height * 0.5f),
@@ -470,22 +474,22 @@ fun OrbitContouredCardSurface(
                     ),
                 )
                 drawContent()
-                // Soft outer neon halo + crisp rim stroke
+                // Soft outer metallic/neon halo + crisp double-tone rim stroke
                 drawPath(
                     path = path,
-                    color = accentColor.copy(alpha = if (highlighted) 0.45f else 0.24f),
-                    style = Stroke(width = if (highlighted) 6.dp.toPx() else 3.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+                    color = rimAccentColor.copy(alpha = if (highlighted) 0.48f else 0.28f),
+                    style = Stroke(width = if (highlighted) 6.dp.toPx() else 3.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
                 )
                 drawPath(
                     path = path,
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            PureWhite.copy(alpha = if (highlighted) 0.95f else 0.70f),
+                            PureWhite.copy(alpha = if (highlighted) 0.96f else 0.76f),
                             rimColor,
-                            accentColor.copy(alpha = 0.55f),
+                            accentColor.copy(alpha = 0.62f),
                         ),
                     ),
-                    style = Stroke(width = if (highlighted) 2.4.dp.toPx() else 1.3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+                    style = Stroke(width = if (highlighted) 2.4.dp.toPx() else 1.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
                 )
             }
             .onKeyEvent { keyEvent ->

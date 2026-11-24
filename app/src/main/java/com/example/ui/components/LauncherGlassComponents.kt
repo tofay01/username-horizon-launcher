@@ -93,6 +93,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Shape
@@ -133,7 +135,7 @@ import kotlin.math.roundToInt
 val LocalTvFocusEnabled = compositionLocalOf { true }
 
 fun wallpaperDrawableRes(wallpaperId: String): Int? = when (wallpaperId) {
-    "earth" -> R.drawable.img_wallpaper_earth
+    "earth", "earth_silver", "earth_gold", "earth_zellige", "earth_pharaoh" -> R.drawable.img_wallpaper_earth
     "aurora" -> R.drawable.img_wallpaper_aurora
     "amber_night" -> R.drawable.img_wallpaper_amber_night
     "cobalt_waves" -> R.drawable.img_wallpaper_cobalt_waves
@@ -207,10 +209,15 @@ fun LauncherWallpaperLayer(
                 else -> null
             }
             if (posterResId != null) {
-                Image(
-                    painter = painterResource(id = posterResId),
+                val activeWpId = if (wallpaperDrawableRes(settings.wallpaperId) != null) {
+                    settings.wallpaperId
+                } else {
+                    settings.themePreset.defaultWallpaperId
+                }
+                EarthTintedWallpaperImage(
+                    wallpaperId = activeWpId,
+                    resId = posterResId,
                     contentDescription = "Launcher wallpaper",
-                    contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
             } else if (proceduralId != null) {
@@ -1265,6 +1272,115 @@ fun buildFuturisticDockPath(
 }
 
 @Composable
+fun EarthTintedWallpaperImage(
+    wallpaperId: String,
+    resId: Int,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+) {
+    val colorFilter = remember(wallpaperId) {
+        when (wallpaperId) {
+            "earth_silver" -> ColorFilter.colorMatrix(
+                ColorMatrix().apply {
+                    setToSaturation(0.24f)
+                }
+            )
+            "earth_gold" -> ColorFilter.colorMatrix(
+                ColorMatrix(
+                    floatArrayOf(
+                        1.18f, 0.14f, 0f, 0f, 14f,
+                        0.08f, 0.88f, 0f, 0f, 4f,
+                        0f, 0f, 0.42f, 0f, -10f,
+                        0f, 0f, 0f, 1f, 0f,
+                    )
+                )
+            )
+            "earth_pharaoh" -> ColorFilter.colorMatrix(
+                ColorMatrix(
+                    floatArrayOf(
+                        1.20f, 0.16f, 0f, 0f, 18f,
+                        0.10f, 0.92f, 0f, 0f, 8f,
+                        0f, 0f, 0.44f, 0f, -8f,
+                        0f, 0f, 0f, 1f, 0f,
+                    )
+                )
+            )
+            "earth_zellige" -> ColorFilter.colorMatrix(
+                ColorMatrix(
+                    floatArrayOf(
+                        0.92f, 0.08f, 0f, 0f, 4f,
+                        0.05f, 1.08f, 0.06f, 0f, 6f,
+                        0f, 0.08f, 0.88f, 0f, 2f,
+                        0f, 0f, 0f, 1f, 0f,
+                    )
+                )
+            )
+            else -> null
+        }
+    }
+
+    Box(modifier = modifier) {
+        Image(
+            painter = painterResource(id = resId),
+            contentDescription = contentDescription,
+            contentScale = ContentScale.Crop,
+            colorFilter = colorFilter,
+            modifier = Modifier.fillMaxSize(),
+        )
+        when (wallpaperId) {
+            "earth_silver" -> Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFFE2E8F0).copy(alpha = 0.12f),
+                                Color(0xFF0F172A).copy(alpha = 0.24f),
+                            )
+                        )
+                    )
+            )
+            "earth_gold" -> Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFFF59E0B).copy(alpha = 0.14f),
+                                Color(0xFF1F1108).copy(alpha = 0.34f),
+                            )
+                        )
+                    )
+            )
+            "earth_zellige" -> Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFF10B981).copy(alpha = 0.12f),
+                                Color(0xFF041D1B).copy(alpha = 0.28f),
+                            )
+                        )
+                    )
+            )
+            "earth_pharaoh" -> Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFFFACC15).copy(alpha = 0.14f),
+                                Color(0xFF231607).copy(alpha = 0.34f),
+                            )
+                        )
+                    )
+            )
+        }
+    }
+}
+
+@Composable
 fun FuturisticDockContainer(
     surfaceColor: Color,
     glassAlpha: Float,
@@ -1272,6 +1388,7 @@ fun FuturisticDockContainer(
     crestHeight: Dp,
     cornerRadius: Dp,
     modifier: Modifier = Modifier,
+    rimColor: Color = accentColor,
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
@@ -1302,7 +1419,7 @@ fun FuturisticDockContainer(
                     path = path,
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            accentColor.copy(alpha = 0.20f * effectiveAlpha.coerceAtLeast(0.4f)),
+                            rimColor.copy(alpha = 0.22f * effectiveAlpha.coerceAtLeast(0.4f)),
                             Color.Transparent,
                         ),
                         center = Offset(size.width * 0.5f, 0f),
@@ -1312,15 +1429,15 @@ fun FuturisticDockContainer(
                 drawContent()
                 drawPath(
                     path = path,
-                    color = accentColor.copy(alpha = 0.32f),
+                    color = rimColor.copy(alpha = 0.34f),
                     style = Stroke(width = 5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
                 )
                 drawPath(
                     path = path,
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            PureWhite.copy(alpha = 0.88f),
-                            accentColor.copy(alpha = 0.95f),
+                            PureWhite.copy(alpha = 0.90f),
+                            rimColor.copy(alpha = 0.96f),
                             accentColor.copy(alpha = 0.72f),
                         )
                     ),

@@ -32,7 +32,6 @@ import com.example.ui.icons.Public
 import com.example.ui.icons.RestartAlt
 import com.example.ui.icons.Schedule
 import com.example.ui.icons.SystemUpdate
-import com.example.ui.icons.Wallpaper
 import com.example.ui.icons.WbSunny
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -394,36 +393,37 @@ fun LauncherSettingsScreen(
                 testTag = "toggle_show_greeting",
             )
 
-            // Studio de fonds d'écran & Interface & Gestes
+            // Personnalisation Thème & Fond d'écran + Gestes
+            val activeThemeLabel = when (settings.language) {
+                com.example.model.LauncherLanguage.AR -> settings.themePreset.labelAr
+                com.example.model.LauncherLanguage.EN -> settings.themePreset.labelEn
+                com.example.model.LauncherLanguage.FR -> settings.themePreset.labelFr
+            }
+            val activeWallpaperTag = when {
+                settings.customWallpaperUri != null && settings.customWallpaperIsVideo -> when (settings.language) {
+                    com.example.model.LauncherLanguage.AR -> "فيديو"
+                    com.example.model.LauncherLanguage.FR -> "Vidéo"
+                    com.example.model.LauncherLanguage.EN -> "Video"
+                }
+                settings.customWallpaperUri != null -> when (settings.language) {
+                    com.example.model.LauncherLanguage.AR -> "صورة"
+                    com.example.model.LauncherLanguage.FR -> "Photo"
+                    com.example.model.LauncherLanguage.EN -> "Photo"
+                }
+                com.example.ui.components.isBuiltInVideoWallpaper(settings.wallpaperId) -> when (settings.language) {
+                    com.example.model.LauncherLanguage.AR -> "فيديو"
+                    com.example.model.LauncherLanguage.FR -> "Vidéo"
+                    com.example.model.LauncherLanguage.EN -> "Video"
+                }
+                else -> null
+            }
             GlassSettingCardRow(
-                title = strings.wallpaperStudio,
-                leadingIcon = Icons.Rounded.Wallpaper,
-                trailingText = when {
-                    settings.customWallpaperUri != null && settings.customWallpaperIsVideo -> "Vidéo"
-                    settings.customWallpaperUri != null -> "Photo"
-                    com.example.ui.components.isBuiltInVideoWallpaper(settings.wallpaperId) -> when (settings.language) {
-                        com.example.model.LauncherLanguage.AR -> "فيديو"
-                        com.example.model.LauncherLanguage.FR -> "Vidéo"
-                        com.example.model.LauncherLanguage.EN -> "Video"
-                    }
-                    else -> settings.wallpaperId
-                },
-                accentColor = accent,
-                onClick = { onNavigate(LauncherDestination.WALLPAPER_STUDIO) },
-                testTag = "open_wallpaper_studio",
-            )
-
-            GlassSettingCardRow(
-                title = strings.uiCustomization,
+                title = strings.themeAndWallpaperTitle,
+                subtitle = if (activeWallpaperTag != null) "$activeThemeLabel · $activeWallpaperTag" else activeThemeLabel,
                 leadingIcon = Icons.Rounded.Palette,
-                trailingText = when (settings.language) {
-                    com.example.model.LauncherLanguage.AR -> settings.themePreset.labelAr
-                    com.example.model.LauncherLanguage.EN -> settings.themePreset.labelEn
-                    com.example.model.LauncherLanguage.FR -> settings.themePreset.labelFr
-                },
                 accentColor = accent,
-                onClick = { onNavigate(LauncherDestination.UI_CUSTOMIZER) },
-                testTag = "open_ui_customizer",
+                onClick = { onNavigate(LauncherDestination.THEME_AND_WALLPAPER) },
+                testTag = "open_theme_and_wallpaper",
             )
 
             GlassSettingCardRow(
@@ -539,15 +539,6 @@ fun LauncherSettingsScreen(
                 isHighlighted = settings.advancedEffectsEnabled,
                 onClick = { onUpdateSettings { it.copy(advancedEffectsEnabled = !it.advancedEffectsEnabled) } },
                 testTag = "toggle_advanced_effects",
-            )
-
-            GlassToggleRow(
-                title = strings.navigationSoundTitle,
-                subtitle = strings.navigationSoundDesc,
-                checked = settings.navigationSoundEnabled,
-                accentColor = accent,
-                onCheckedChange = { enabled -> onUpdateSettings { it.copy(navigationSoundEnabled = enabled) } },
-                testTag = "toggle_navigation_sound_settings",
             )
 
             GlassSettingCardRow(

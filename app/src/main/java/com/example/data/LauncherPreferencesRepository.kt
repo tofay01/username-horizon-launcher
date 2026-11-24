@@ -199,7 +199,10 @@ class LauncherPreferencesRepository(private val context: Context) {
                 val parts = pair.split("=")
                 if (parts.size == 2) {
                     val g = GestureType.entries.firstOrNull { it.key == parts[0] }
-                    val a = GestureAction.entries.firstOrNull { it.key == parts[1] }
+                    val a = when (parts[1]) {
+                        "open_wallpaper_studio", "open_ui_customizer" -> GestureAction.OPEN_THEME_CUSTOMIZER
+                        else -> GestureAction.entries.firstOrNull { it.key == parts[1] }
+                    }
                     if (g != null && a != null) parsed[g] = a
                 }
             }

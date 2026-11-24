@@ -89,10 +89,12 @@ import com.example.model.LauncherStrings
 import com.example.model.ThemeCategory
 import com.example.model.ThemePreset
 import com.example.ui.LauncherUiState
+import com.example.ui.components.EarthTintedWallpaperImage
 import com.example.ui.components.GlassSegmentedSelector
 import com.example.ui.components.GlassSettingCardRow
 import com.example.ui.components.GlassToggleRow
 import com.example.ui.components.ProceduralThemeWallpaper
+import com.example.ui.components.ThemePreviewAccentFrame
 import com.example.ui.components.TvFocusableSurface
 import com.example.ui.components.hasBuiltInArtworkWallpaper
 import com.example.ui.components.wallpaperDrawableRes
@@ -113,10 +115,11 @@ private data class BuiltInWallpaper(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun WallpaperStudioScreen(
+fun ThemeAndWallpaperScreen(
     state: LauncherUiState,
     onBack: () -> Unit,
     onUpdateSettings: ((LauncherSettings) -> LauncherSettings) -> Unit,
+    onApplyThemePreset: (ThemePreset) -> Unit,
     onSelectCustomWallpaper: (Uri, Boolean?) -> Unit,
 ) {
     BackHandler { onBack() }
@@ -225,54 +228,48 @@ fun WallpaperStudioScreen(
         )
     }
 
-    val wallpapers = remember(settings.language) {
-        val scenic = listOf(
+    // Only wallpapers that are NOT already represented by a ThemePreset card above (no duplicates)
+    val exclusiveStaticWallpapers = remember(settings.language) {
+        listOf(
             BuiltInWallpaper("earth", "Terre Nocturne", R.drawable.img_wallpaper_earth),
             BuiltInWallpaper("aurora", "Aurore Boréale", R.drawable.img_wallpaper_aurora),
             BuiltInWallpaper("amber_night", "Dunes Crépuscule", R.drawable.img_wallpaper_amber_night),
             BuiltInWallpaper("cobalt_waves", "Ondes Cobalt", R.drawable.img_wallpaper_cobalt_waves),
             BuiltInWallpaper("gradient_dark", "Dégradé Thème", null),
+            BuiltInWallpaper(
+                id = "sport_algeria_fennecs",
+                title = when (settings.language) {
+                    LauncherLanguage.AR -> "الجزائر · محاربو الصحراء"
+                    LauncherLanguage.FR -> "Algérie · Fennecs"
+                    LauncherLanguage.EN -> "Algeria · Fennecs"
+                },
+                drawableRes = R.drawable.img_sport_algeria_fennecs,
+            ),
+            BuiltInWallpaper(
+                id = "sport_brazil_light",
+                title = when (settings.language) {
+                    LauncherLanguage.AR -> "البرازيل · نسخة فاتحة"
+                    LauncherLanguage.FR -> "Brésil · Édition Claire"
+                    LauncherLanguage.EN -> "Brazil · Light Edition"
+                },
+                drawableRes = R.drawable.img_sport_brazil_light,
+            ),
         )
-        val themedWallpapers = ThemePreset.entries
-            .filter { it.category != ThemeCategory.CLASSIC }
-            .map { preset ->
-                val title = when (settings.language) {
-                    LauncherLanguage.AR -> preset.labelAr
-                    LauncherLanguage.FR -> preset.labelFr
-                    LauncherLanguage.EN -> preset.labelEn
-                }
-                BuiltInWallpaper(
-                    id = preset.defaultWallpaperId,
-                    title = title,
-                    drawableRes = wallpaperDrawableRes(preset.defaultWallpaperId),
-                )
-            } + listOf(
-                BuiltInWallpaper(
-                    id = "sport_algeria_fennecs",
-                    title = when (settings.language) {
-                        LauncherLanguage.AR -> "الجزائر · محاربو الصحراء"
-                        LauncherLanguage.FR -> "Algérie · Fennecs"
-                        LauncherLanguage.EN -> "Algeria · Fennecs"
-                    },
-                    drawableRes = R.drawable.img_sport_algeria_fennecs,
-                ),
-                BuiltInWallpaper(
-                    id = "sport_brazil_light",
-                    title = when (settings.language) {
-                        LauncherLanguage.AR -> "البرازيل · نسخة فاتحة"
-                        LauncherLanguage.FR -> "Brésil · Édition Claire"
-                        LauncherLanguage.EN -> "Brazil · Light Edition"
-                    },
-                    drawableRes = R.drawable.img_sport_brazil_light,
-                ),
-            )
-        scenic + themedWallpapers
     }
+
+    val accentSwatches = listOf(
+        0xFF38BDF8L,
+        0xFF00E5FFL,
+        0xFF34D399L,
+        0xFFFBBF24L,
+        0xFFA855F7L,
+        0xFFF43F5EL,
+    )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xD6081B44), Color(0xEB040D22))))
+            .background(Brush.verticalGradient(listOf(Color(0xEE081B44), Color(0xF6040D22))))
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -283,7 +280,7 @@ fun WallpaperStudioScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             val backFocus = remember { FocusRequester() }
             LaunchedEffect(Unit) { runCatching { backFocus.requestFocus() } }
@@ -295,17 +292,149 @@ fun WallpaperStudioScreen(
                     shape = RoundedCornerShape(12.dp),
                     baseColor = Color.White.copy(alpha = 0.08f),
                     focusRequester = backFocus,
-                    modifier = Modifier.size(48.dp).testTag("wallpaper_back_btn"),
+                    modifier = Modifier.size(48.dp).testTag("ui_customizer_back_btn"),
                 ) {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = strings.backLabel, tint = PureWhite)
                     }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(strings.wallpaperStudio, style = MaterialTheme.typography.headlineLarge, color = PureWhite)
+                Text(strings.themeAndWallpaperTitle, style = MaterialTheme.typography.headlineLarge, color = PureWhite)
             }
 
-            // Pickers: Device Image, Device Video, or File Browser (TV/USB safe)
+            // 1. Categorized Theme Presets (Classic + Signature Skins + Sports + Country Flags + Cinema + Anime)
+            val themeGroups = remember(strings) {
+                listOf(
+                    strings.themeCategoryClassic to ThemePreset.entries.filter { it.category == ThemeCategory.CLASSIC },
+                    strings.themeCategorySignature to ThemePreset.entries.filter { it.category == ThemeCategory.SIGNATURE_SKINS },
+                    strings.themeCategoryClubs to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_CLUBS },
+                    strings.themeCategoryNational to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_NATIONAL },
+                    strings.themeCategoryArab to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_ARAB },
+                    strings.themeCategoryFlags to ThemePreset.entries.filter { it.category == ThemeCategory.COUNTRY_FLAGS },
+                    strings.themeCategoryCinema to ThemePreset.entries.filter { it.category == ThemeCategory.CINEMA },
+                    strings.themeCategoryAnime to ThemePreset.entries.filter { it.category == ThemeCategory.ANIME },
+                )
+            }
+            themeGroups.forEach { (categoryTitle, presets) ->
+                Text(
+                    text = categoryTitle,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = accent,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    presets.forEach { preset ->
+                        val selected = settings.themePreset == preset
+                        val label = when (settings.language) {
+                            LauncherLanguage.FR -> preset.labelFr
+                            LauncherLanguage.AR -> preset.labelAr
+                            LauncherLanguage.EN -> preset.labelEn
+                        }
+                        val previewRes = wallpaperDrawableRes(preset.defaultWallpaperId)
+                        TvFocusableSurface(
+                            onClick = { onApplyThemePreset(preset) },
+                            accentColor = Color(preset.rimHex),
+                            shape = RoundedCornerShape(16.dp),
+                            baseColor = Color(preset.surfaceHex).copy(alpha = 0.72f),
+                            focusedColor = Color(preset.accentHex).copy(alpha = 0.36f),
+                            baseBorderColor = Color.White.copy(alpha = 0.24f),
+                            isSelected = selected,
+                            modifier = Modifier
+                                .width(184.dp)
+                                .aspectRatio(16f / 9f)
+                                .testTag("theme_preset_${preset.id}"),
+                        ) {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                if (previewRes != null) {
+                                    EarthTintedWallpaperImage(
+                                        wallpaperId = preset.defaultWallpaperId,
+                                        resId = previewRes,
+                                        contentDescription = label,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                } else if (hasBuiltInArtworkWallpaper(preset.defaultWallpaperId)) {
+                                    ProceduralThemeWallpaper(
+                                        wallpaperId = preset.defaultWallpaperId,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(
+                                                Brush.radialGradient(
+                                                    listOf(Color(preset.surfaceHex), DeepSpaceBlack)
+                                                )
+                                            )
+                                    )
+                                }
+                                ThemePreviewAccentFrame(
+                                    skinStyle = preset.skinStyle,
+                                    rimColor = Color(preset.rimHex),
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(
+                                            Brush.verticalGradient(
+                                                colors = listOf(
+                                                    Color.Black.copy(alpha = 0.08f),
+                                                    Color.Black.copy(alpha = 0.72f),
+                                                )
+                                            )
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                ) {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                                        color = PureWhite,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.align(Alignment.BottomStart),
+                                    )
+                                    if (selected) {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                                .size(24.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(preset.accentHex)),
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Check,
+                                                contentDescription = null,
+                                                tint = DeepSpaceBlack,
+                                                modifier = Modifier.size(16.dp),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Wallpapers, Device Media Pickers, Videos & Background Dimming
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp, bottom = 2.dp)
+                    .height(1.dp)
+                    .background(Color.White.copy(alpha = 0.16f)),
+            )
+            Text(
+                text = strings.wallpapersSectionTitle,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = PureWhite,
+            )
+
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -507,14 +636,14 @@ fun WallpaperStudioScreen(
                 text = strings.staticWallpapersSection,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = accent,
-                modifier = Modifier.padding(top = 6.dp),
+                modifier = Modifier.padding(top = 4.dp),
             )
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                wallpapers.forEach { wp ->
+                exclusiveStaticWallpapers.forEach { wp ->
                     BuiltInWallpaperCard(
                         wp = wp,
                         selected = settings.customWallpaperUri == null && settings.wallpaperId == wp.id,
@@ -533,6 +662,7 @@ fun WallpaperStudioScreen(
                 }
             }
 
+            // Wallpaper Dimming
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = GlassBlue.copy(alpha = 0.55f),
@@ -623,287 +753,22 @@ fun WallpaperStudioScreen(
                     )
                 }
             }
-        }
-    }
-}
 
-@Composable
-private fun BuiltInWallpaperCard(
-    wp: BuiltInWallpaper,
-    selected: Boolean,
-    surfaceHex: Long,
-    accent: Color,
-    onSelect: () -> Unit,
-) {
-    TvFocusableSurface(
-        onClick = onSelect,
-        accentColor = accent,
-        shape = RoundedCornerShape(18.dp),
-        baseColor = Color.Transparent,
-        isSelected = selected,
-        modifier = Modifier
-            .width(240.dp)
-            .aspectRatio(16f / 9f)
-            .testTag("wallpaper_card_${wp.id}"),
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            if (wp.drawableRes != null) {
-                Image(
-                    painter = painterResource(id = wp.drawableRes),
-                    contentDescription = wp.title,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else if (hasBuiltInArtworkWallpaper(wp.id)) {
-                ProceduralThemeWallpaper(
-                    wallpaperId = wp.id,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.radialGradient(
-                                listOf(Color(surfaceHex), DeepSpaceBlack)
-                            )
-                        )
-                )
-            }
+            // 3. Colors, Icons & Glass Card Style
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Black.copy(alpha = 0.10f),
-                                Color.Black.copy(alpha = 0.45f),
-                            )
-                        )
-                    )
-                    .padding(12.dp),
-            ) {
-                if (wp.isVideo) {
-                    Surface(
-                        shape = RoundedCornerShape(999.dp),
-                        color = Color.Black.copy(alpha = 0.62f),
-                        border = BorderStroke(1.dp, accent.copy(alpha = 0.72f)),
-                        modifier = Modifier.align(Alignment.TopStart),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(3.dp),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.PlayArrow,
-                                contentDescription = null,
-                                tint = accent,
-                                modifier = Modifier.size(14.dp),
-                            )
-                            Text(
-                                text = "VIDEO",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = PureWhite,
-                            )
-                        }
-                    }
-                }
-                Text(
-                    text = wp.title,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = PureWhite,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.BottomStart),
-                )
-                if (selected) {
-                    Icon(
-                        imageVector = Icons.Rounded.Check,
-                        contentDescription = "Selected",
-                        tint = accent,
-                        modifier = Modifier.align(Alignment.TopEnd),
-                    )
-                }
-            }
-        }
-    }
-}
+                    .fillMaxWidth()
+                    .padding(top = 10.dp, bottom = 2.dp)
+                    .height(1.dp)
+                    .background(Color.White.copy(alpha = 0.16f)),
+            )
+            Text(
+                text = strings.appearanceSectionTitle,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = PureWhite,
+            )
 
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun UiCustomizerScreen(
-    state: LauncherUiState,
-    onBack: () -> Unit,
-    onUpdateSettings: ((LauncherSettings) -> LauncherSettings) -> Unit,
-    onApplyThemePreset: (ThemePreset) -> Unit,
-) {
-    BackHandler { onBack() }
-
-    val settings = state.settings
-    val strings = LauncherStrings.get(settings.language)
-    val accent = settings.accentColor
-
-    val accentSwatches = listOf(
-        0xFF38BDF8L,
-        0xFF00E5FFL,
-        0xFF34D399L,
-        0xFFFBBF24L,
-        0xFFA855F7L,
-        0xFFF43F5EL,
-    )
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xEE081B44), Color(0xF6040D22))))
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .navigationBarsPadding(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Column(
-            modifier = Modifier
-                .widthIn(max = 880.dp)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            val uiBackFocus = remember { FocusRequester() }
-            LaunchedEffect(Unit) { runCatching { uiBackFocus.requestFocus() } }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TvFocusableSurface(
-                    onClick = onBack,
-                    accentColor = accent,
-                    shape = RoundedCornerShape(12.dp),
-                    baseColor = Color.White.copy(alpha = 0.08f),
-                    focusRequester = uiBackFocus,
-                    modifier = Modifier.size(48.dp).testTag("ui_customizer_back_btn"),
-                ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = strings.backLabel, tint = PureWhite)
-                    }
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(strings.uiCustomization, style = MaterialTheme.typography.headlineLarge, color = PureWhite)
-            }
-
-            // Categorized Theme Presets (Classic + Sports + Country Flags + Cinema + Anime)
-            val themeGroups = remember(strings) {
-                listOf(
-                    strings.themeCategoryClassic to ThemePreset.entries.filter { it.category == ThemeCategory.CLASSIC },
-                    strings.themeCategoryClubs to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_CLUBS },
-                    strings.themeCategoryNational to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_NATIONAL },
-                    strings.themeCategoryArab to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_ARAB },
-                    strings.themeCategoryFlags to ThemePreset.entries.filter { it.category == ThemeCategory.COUNTRY_FLAGS },
-                    strings.themeCategoryCinema to ThemePreset.entries.filter { it.category == ThemeCategory.CINEMA },
-                    strings.themeCategoryAnime to ThemePreset.entries.filter { it.category == ThemeCategory.ANIME },
-                )
-            }
-            themeGroups.forEach { (categoryTitle, presets) ->
-                Text(
-                    text = categoryTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = accent,
-                    modifier = Modifier.padding(top = 6.dp),
-                )
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    presets.forEach { preset ->
-                        val selected = settings.themePreset == preset
-                        val label = when (settings.language) {
-                            LauncherLanguage.FR -> preset.labelFr
-                            LauncherLanguage.AR -> preset.labelAr
-                            LauncherLanguage.EN -> preset.labelEn
-                        }
-                        val previewRes = wallpaperDrawableRes(preset.defaultWallpaperId)
-                        TvFocusableSurface(
-                            onClick = { onApplyThemePreset(preset) },
-                            accentColor = Color(preset.accentHex),
-                            shape = RoundedCornerShape(16.dp),
-                            baseColor = Color(preset.surfaceHex).copy(alpha = 0.72f),
-                            focusedColor = Color(preset.accentHex).copy(alpha = 0.36f),
-                            baseBorderColor = Color.White.copy(alpha = 0.24f),
-                            isSelected = selected,
-                            modifier = Modifier
-                                .width(196.dp)
-                                .aspectRatio(16f / 9f)
-                                .testTag("theme_preset_${preset.id}"),
-                        ) {
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                if (previewRes != null) {
-                                    Image(
-                                        painter = painterResource(id = previewRes),
-                                        contentDescription = label,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                } else if (hasBuiltInArtworkWallpaper(preset.defaultWallpaperId)) {
-                                    ProceduralThemeWallpaper(
-                                        wallpaperId = preset.defaultWallpaperId,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                } else {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(
-                                                Brush.radialGradient(
-                                                    listOf(Color(preset.surfaceHex), DeepSpaceBlack)
-                                                )
-                                            )
-                                    )
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(
-                                            Brush.verticalGradient(
-                                                colors = listOf(
-                                                    Color.Black.copy(alpha = 0.08f),
-                                                    Color.Black.copy(alpha = 0.72f),
-                                                )
-                                            )
-                                        )
-                                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                                ) {
-                                    Text(
-                                        text = label,
-                                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                                        color = PureWhite,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.align(Alignment.BottomStart),
-                                    )
-                                    if (selected) {
-                                        Box(
-                                            contentAlignment = Alignment.Center,
-                                            modifier = Modifier
-                                                .align(Alignment.TopEnd)
-                                                .size(24.dp)
-                                                .clip(CircleShape)
-                                                .background(Color(preset.accentHex)),
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Rounded.Check,
-                                                contentDescription = null,
-                                                tint = DeepSpaceBlack,
-                                                modifier = Modifier.size(16.dp),
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Accent Color Swatches
-            Text("Couleur d'accentuation", style = MaterialTheme.typography.titleMedium, color = accent)
+            Text(strings.accentColorTitle, style = MaterialTheme.typography.titleMedium, color = accent)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 accentSwatches.forEach { hex ->
                     val selected = settings.accentColorHex == hex
@@ -914,7 +779,7 @@ fun UiCustomizerScreen(
                         baseColor = Color(hex),
                         focusedColor = Color(hex),
                         isSelected = selected,
-                        modifier = Modifier.size(46.dp).testTag("accent_swatch_$hex"),
+                        modifier = Modifier.size(48.dp).testTag("accent_swatch_$hex"),
                     ) {
                         if (selected) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -925,11 +790,10 @@ fun UiCustomizerScreen(
                 }
             }
 
-            // Custom Section Header Title
             OutlinedTextField(
                 value = settings.customSectionTitle,
                 onValueChange = { title -> onUpdateSettings { it.copy(customSectionTitle = title) } },
-                label = { Text("Titre de la rangée principale", color = MutedSlate) },
+                label = { Text(strings.mainRowTitleLabel, color = MutedSlate) },
                 singleLine = true,
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -941,16 +805,15 @@ fun UiCustomizerScreen(
                 modifier = Modifier.fillMaxWidth().testTag("custom_section_title_input"),
             )
 
-            // Dock Style
-            Text("Style du dock des applications", style = MaterialTheme.typography.titleMedium, color = accent)
+            Text(strings.dockStyleTitle, style = MaterialTheme.typography.titleMedium, color = accent)
             GlassSegmentedSelector(
                 options = DockStyle.entries,
                 selected = settings.dockStyle,
                 labelProvider = {
                     when (it) {
-                        DockStyle.FLOATING_GLASS -> "Verre flottant"
-                        DockStyle.FULL_WIDTH -> "Pleine largeur"
-                        DockStyle.MINIMAL_CARDS -> "Minimaliste"
+                        DockStyle.FLOATING_GLASS -> strings.dockStyleFloating
+                        DockStyle.FULL_WIDTH -> strings.dockStyleFullWidth
+                        DockStyle.MINIMAL_CARDS -> strings.dockStyleMinimal
                     }
                 },
                 accentColor = accent,
@@ -958,7 +821,6 @@ fun UiCustomizerScreen(
                 testTagPrefix = "dock_style",
             )
 
-            // Icon Size (Small, Medium = current, Large)
             Text(strings.iconSizeTitle, style = MaterialTheme.typography.titleMedium, color = accent)
             GlassSegmentedSelector(
                 options = AppIconSize.entries,
@@ -976,7 +838,6 @@ fun UiCustomizerScreen(
                 tagSuffixProvider = { it.id },
             )
 
-            // Icon Shape (Circle, Rectangle = current, Square)
             Text(strings.iconShapeTitle, style = MaterialTheme.typography.titleMedium, color = accent)
             GlassSegmentedSelector(
                 options = AppIconShape.entries,
@@ -994,18 +855,7 @@ fun UiCustomizerScreen(
                 tagSuffixProvider = { it.id },
             )
 
-            // Favorites Bar Size (60%..130%)
-            com.example.ui.components.DockSizeStepperCard(
-                dockScalePercent = settings.dockScalePercent,
-                title = strings.dockSizeTitle,
-                hint = strings.dockSizeHint,
-                accentColor = accent,
-                onChangeScale = { scale ->
-                    onUpdateSettings { it.copy(dockScalePercent = scale.coerceIn(60, 130)) }
-                },
-            )
-
-            // TV-Remote & Touch Steppers + Sliders: Card Transparency & Corner Radius
+            // Card Transparency & Corner Radius
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = GlassBlue.copy(alpha = 0.50f),
@@ -1164,75 +1014,110 @@ fun UiCustomizerScreen(
                 testTag = "toggle_navigation_sound",
             )
 
-            // Left Widget Mode Selector (Adhan vs Daily Calendar alternative) + Visibility Toggles
-            val currentLeftMode = when {
-                settings.showPrayerWidget && settings.showCalendarWidget -> "both"
-                !settings.showPrayerWidget && settings.showCalendarWidget -> "calendar"
-                settings.showPrayerWidget && !settings.showCalendarWidget -> "prayer"
-                else -> "hidden"
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = strings.leftWidgetModeTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = accent,
-                )
-                Text(
-                    text = strings.leftWidgetModeDesc,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MutedSlate,
-                )
-                GlassSegmentedSelector(
-                    options = listOf("prayer", "calendar", "both", "hidden"),
-                    selected = currentLeftMode,
-                    labelProvider = { mode ->
-                        when (mode) {
-                            "prayer" -> strings.leftWidgetModeAdhan
-                            "calendar" -> strings.leftWidgetModeCalendar
-                            "both" -> strings.leftWidgetModeBoth
-                            else -> strings.leftWidgetModeHidden
-                        }
-                    },
-                    accentColor = accent,
-                    onSelect = { mode ->
-                        onUpdateSettings { s ->
-                            when (mode) {
-                                "prayer" -> s.copy(showPrayerWidget = true, showCalendarWidget = false)
-                                "calendar" -> s.copy(showPrayerWidget = false, showCalendarWidget = true)
-                                "both" -> s.copy(showPrayerWidget = true, showCalendarWidget = true)
-                                else -> s.copy(showPrayerWidget = false, showCalendarWidget = false)
-                            }
-                        }
-                    },
-                    testTagPrefix = "left_widget_mode",
-                )
-            }
-
-            GlassToggleRow(
-                title = strings.showPrayerCardToggle,
-                checked = settings.showPrayerWidget,
-                accentColor = accent,
-                onCheckedChange = { v -> onUpdateSettings { it.copy(showPrayerWidget = v) } },
-                testTag = "toggle_prayer_widget",
-            )
-
-            GlassToggleRow(
-                title = strings.showCalendarCardToggle,
-                checked = settings.showCalendarWidget,
-                accentColor = accent,
-                onCheckedChange = { v -> onUpdateSettings { it.copy(showCalendarWidget = v) } },
-                testTag = "toggle_calendar_widget",
-            )
-
-            GlassToggleRow(
-                title = strings.showWeatherCardToggle,
-                checked = settings.showWeatherWidget,
-                accentColor = accent,
-                onCheckedChange = { v -> onUpdateSettings { it.copy(showWeatherWidget = v) } },
-                testTag = "toggle_weather_widget",
-            )
-
             Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun BuiltInWallpaperCard(
+    wp: BuiltInWallpaper,
+    selected: Boolean,
+    surfaceHex: Long,
+    accent: Color,
+    onSelect: () -> Unit,
+) {
+    TvFocusableSurface(
+        onClick = onSelect,
+        accentColor = accent,
+        shape = RoundedCornerShape(18.dp),
+        baseColor = Color.Transparent,
+        isSelected = selected,
+        modifier = Modifier
+            .width(240.dp)
+            .aspectRatio(16f / 9f)
+            .testTag("wallpaper_card_${wp.id}"),
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (wp.drawableRes != null) {
+                Image(
+                    painter = painterResource(id = wp.drawableRes),
+                    contentDescription = wp.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else if (hasBuiltInArtworkWallpaper(wp.id)) {
+                ProceduralThemeWallpaper(
+                    wallpaperId = wp.id,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.radialGradient(
+                                listOf(Color(surfaceHex), DeepSpaceBlack)
+                            )
+                        )
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Black.copy(alpha = 0.10f),
+                                Color.Black.copy(alpha = 0.45f),
+                            )
+                        )
+                    )
+                    .padding(12.dp),
+            ) {
+                if (wp.isVideo) {
+                    Surface(
+                        shape = RoundedCornerShape(999.dp),
+                        color = Color.Black.copy(alpha = 0.62f),
+                        border = BorderStroke(1.dp, accent.copy(alpha = 0.72f)),
+                        modifier = Modifier.align(Alignment.TopStart),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.PlayArrow,
+                                contentDescription = null,
+                                tint = accent,
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Text(
+                                text = "VIDEO",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = PureWhite,
+                            )
+                        }
+                    }
+                }
+                Text(
+                    text = wp.title,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = PureWhite,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.align(Alignment.BottomStart),
+                )
+                if (selected) {
+                    Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = "Selected",
+                        tint = accent,
+                        modifier = Modifier.align(Alignment.TopEnd),
+                    )
+                }
+            }
         }
     }
 }
