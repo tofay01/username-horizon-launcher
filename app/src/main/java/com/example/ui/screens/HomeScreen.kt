@@ -291,8 +291,8 @@ fun HomeScreen(
             val dockGlassAlpha = settings.glassOpacity.coerceIn(0f, 0.95f)
             val tileSpacing = ((if (!isCompactWidth && (settings.iconSize == AppIconSize.LARGE || perRow >= 7)) 6f else 8f) * dockScale).dp
             val useScroll = isCompactWidth || settings.rowsBelowFavorites > 0 || favoriteRows.size > 1
-            var showCalendarInLeftSlot by rememberSaveable(settings.showPrayerWidget, settings.showCalendarWidget) {
-                mutableStateOf(settings.showCalendarWidget)
+            var showCalendarInLeftSlot by rememberSaveable(settings.showCalendarWidget) {
+                mutableStateOf(!settings.showPrayerWidget && settings.showCalendarWidget)
             }
             val hasLeftPrayer = settings.showPrayerWidget
             val hasLeftCalendar = settings.showCalendarWidget

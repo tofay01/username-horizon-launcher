@@ -460,7 +460,7 @@ data class LauncherSettings(
     val navigationSoundEnabled: Boolean = true,
     val showWeatherWidget: Boolean = true,
     val showPrayerWidget: Boolean = true,
-    val showCalendarWidget: Boolean = false,
+    val showCalendarWidget: Boolean = true,
     val useCelsius: Boolean = true,
     val useGpsLocation: Boolean = true,
     val cityName: String = "Mions Centre, Auvergne-Rhône-Alpes, France",

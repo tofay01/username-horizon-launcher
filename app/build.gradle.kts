@@ -16,8 +16,8 @@ android {
     applicationId = "com.aistudio.horizonlauncher.qvxkpm"
     minSdk = 24
     targetSdk = 36
-    versionCode = 19
-    versionName = "1.18"
+    versionCode = 20
+    versionName = "1.19"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -145,8 +145,15 @@ dependencies {
   "ksp"(libs.moshi.kotlin.codegen)
 }
 
-tasks.register<Copy>("exportApk") {
+val syncBuildOutputsApk = tasks.register<Copy>("syncBuildOutputsApk") {
   dependsOn("assembleDebug")
+  from(layout.buildDirectory.file("outputs/apk/debug/app-debug.apk"))
+  into(rootProject.layout.projectDirectory.dir(".build-outputs"))
+  rename { "app-debug.apk" }
+}
+
+tasks.register<Copy>("exportApk") {
+  dependsOn("assembleDebug", syncBuildOutputsApk)
   from(layout.buildDirectory.file("outputs/apk/debug/app-debug.apk"))
   into(rootProject.layout.projectDirectory.dir("apk"))
   rename { "HorizonLauncher.apk" }
