@@ -87,6 +87,7 @@ import com.example.model.LauncherLanguage
 import com.example.model.LauncherSettings
 import com.example.model.LauncherStrings
 import com.example.model.ThemeCategory
+import com.example.data.OnlineVideoWallpaperRepository
 import com.example.model.ThemePreset
 import com.example.ui.LauncherUiState
 import com.example.ui.components.GlassSegmentedSelector
@@ -107,7 +108,15 @@ private data class BuiltInWallpaper(
     val title: String,
     val drawableRes: Int?,
     val isVideo: Boolean = false,
+    val isOnline: Boolean = false,
 )
+
+private enum class WallpaperGalleryTab(val id: String) {
+    ALL("all"),
+    ONLINE_VIDEOS("online"),
+    BUILTIN_VIDEOS("builtin"),
+    THEMES_AND_STATIC("themes"),
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -123,6 +132,7 @@ fun ThemeAndWallpaperScreen(
     val settings = state.settings
     val strings = LauncherStrings.get(settings.language)
     val accent = settings.accentColor
+    var selectedTab by remember { mutableStateOf(WallpaperGalleryTab.ALL) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -224,6 +234,18 @@ fun ThemeAndWallpaperScreen(
         )
     }
 
+    val onlineNatureWallpapers = remember(settings.language) {
+        OnlineVideoWallpaperRepository.presets.map { spec ->
+            BuiltInWallpaper(
+                id = spec.id,
+                title = spec.localizedTitle(settings.language),
+                drawableRes = spec.posterResId,
+                isVideo = true,
+                isOnline = true,
+            )
+        }
+    }
+
     // Only wallpapers that are NOT already represented by a ThemePreset card above (no duplicates)
     val exclusiveStaticWallpapers = remember(settings.language) {
         listOf(
@@ -298,13 +320,97 @@ fun ThemeAndWallpaperScreen(
                 Text(strings.themeAndWallpaperTitle, style = MaterialTheme.typography.headlineLarge, color = PureWhite)
             }
 
-            // 1. Categorized Theme Presets (Classic + Sports Clubs)
-            val themeGroups = remember(strings) {
-                listOf(
-                    strings.themeCategoryClassic to ThemePreset.entries.filter { it.category == ThemeCategory.CLASSIC },
-                    strings.themeCategoryClubs to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_CLUBS },
+            GlassSegmentedSelector(
+                options = WallpaperGalleryTab.entries,
+                selected = selectedTab,
+                labelProvider = { tab ->
+                    when (tab) {
+                        WallpaperGalleryTab.ALL -> strings.wallpaperFilterAll
+                        WallpaperGalleryTab.ONLINE_VIDEOS -> strings.wallpaperFilterOnline
+                        WallpaperGalleryTab.BUILTIN_VIDEOS -> strings.wallpaperFilterBuiltInVideo
+                        WallpaperGalleryTab.THEMES_AND_STATIC -> strings.wallpaperFilterThemesStatic
+                    }
+                },
+                accentColor = accent,
+                onSelect = { selectedTab = it },
+                testTagPrefix = "wallpaper_filter",
+                tagSuffixProvider = { it.id },
+            )
+
+            if (selectedTab == WallpaperGalleryTab.ALL || selectedTab == WallpaperGalleryTab.ONLINE_VIDEOS) {
+                Text(
+                    text = strings.onlineNatureVideoWallpapersSection,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = accent,
+                    modifier = Modifier.padding(top = 4.dp),
                 )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    onlineNatureWallpapers.forEach { wp ->
+                        BuiltInWallpaperCard(
+                            wp = wp,
+                            selected = settings.customWallpaperUri == null && settings.wallpaperId == wp.id,
+                            surfaceHex = settings.themePreset.surfaceHex,
+                            accent = accent,
+                            onlineBadgeLabel = strings.onlineBadgeLabel,
+                            onSelect = {
+                                onUpdateSettings {
+                                    it.copy(
+                                        wallpaperId = wp.id,
+                                        customWallpaperUri = null,
+                                        customWallpaperIsVideo = false,
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
             }
+
+            if (selectedTab == WallpaperGalleryTab.ALL || selectedTab == WallpaperGalleryTab.BUILTIN_VIDEOS) {
+                Text(
+                    text = strings.animatedVideoWallpapersSection,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = accent,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    videoWallpapers.forEach { wp ->
+                        BuiltInWallpaperCard(
+                            wp = wp,
+                            selected = settings.customWallpaperUri == null && settings.wallpaperId == wp.id,
+                            surfaceHex = settings.themePreset.surfaceHex,
+                            accent = accent,
+                            onlineBadgeLabel = strings.onlineBadgeLabel,
+                            onSelect = {
+                                onUpdateSettings {
+                                    it.copy(
+                                        wallpaperId = wp.id,
+                                        customWallpaperUri = null,
+                                        customWallpaperIsVideo = false,
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+
+            if (selectedTab == WallpaperGalleryTab.ALL || selectedTab == WallpaperGalleryTab.THEMES_AND_STATIC) {
+                // 1. Categorized Theme Presets (Classic + Sports Clubs)
+                val themeGroups = remember(strings) {
+                    listOf(
+                        strings.themeCategoryClassic to ThemePreset.entries.filter { it.category == ThemeCategory.CLASSIC },
+                        strings.themeCategoryClubs to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_CLUBS },
+                    )
+                }
             themeGroups.forEach { (categoryTitle, presets) ->
                 Text(
                     text = categoryTitle,
@@ -582,36 +688,6 @@ fun ThemeAndWallpaperScreen(
                     }
                 }
             }
-
-            Text(
-                text = strings.animatedVideoWallpapersSection,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = accent,
-            )
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                videoWallpapers.forEach { wp ->
-                    BuiltInWallpaperCard(
-                        wp = wp,
-                        selected = settings.customWallpaperUri == null && settings.wallpaperId == wp.id,
-                        surfaceHex = settings.themePreset.surfaceHex,
-                        accent = accent,
-                        onSelect = {
-                            onUpdateSettings {
-                                it.copy(
-                                    wallpaperId = wp.id,
-                                    customWallpaperUri = null,
-                                    customWallpaperIsVideo = false,
-                                )
-                            }
-                        },
-                    )
-                }
-            }
-
             Text(
                 text = strings.staticWallpapersSection,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -629,6 +705,7 @@ fun ThemeAndWallpaperScreen(
                         selected = settings.customWallpaperUri == null && settings.wallpaperId == wp.id,
                         surfaceHex = settings.themePreset.surfaceHex,
                         accent = accent,
+                        onlineBadgeLabel = strings.onlineBadgeLabel,
                         onSelect = {
                             onUpdateSettings {
                                 it.copy(
@@ -640,6 +717,7 @@ fun ThemeAndWallpaperScreen(
                         },
                     )
                 }
+            }
             }
 
             // Wallpaper Dimming
@@ -1005,6 +1083,7 @@ private fun BuiltInWallpaperCard(
     selected: Boolean,
     surfaceHex: Long,
     accent: Color,
+    onlineBadgeLabel: String,
     onSelect: () -> Unit,
 ) {
     TvFocusableSurface(
@@ -1069,7 +1148,7 @@ private fun BuiltInWallpaperCard(
                                 modifier = Modifier.size(14.dp),
                             )
                             Text(
-                                text = "VIDEO",
+                                text = if (wp.isOnline) "$onlineBadgeLabel · VIDEO" else "VIDEO",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = PureWhite,
                             )

@@ -435,6 +435,15 @@ class HomeScreenTilesTest {
         composeRule.onNodeWithTag("wallpaper_card_video_crimson_nebula").assertExists()
         composeRule.onNodeWithTag("wallpaper_card_video_cobalt_fractal").assertExists()
         composeRule.onNodeWithTag("wallpaper_card_video_violet_nebula").assertExists()
+        // Verify all 5 online nature & beach video wallpaper cards exist and are selectable
+        composeRule.onNodeWithTag("wallpaper_card_online_ocean_big_sur").assertExists()
+        composeRule.onNodeWithTag("wallpaper_card_online_sand_beach_waves").performScrollTo().performClick()
+        assertEquals("online_sand_beach_waves", latestSettings.wallpaperId)
+        assertEquals(null, latestSettings.customWallpaperUri)
+        assertEquals(false, latestSettings.customWallpaperIsVideo)
+        composeRule.onNodeWithTag("wallpaper_card_online_adriatic_coast").assertExists()
+        composeRule.onNodeWithTag("wallpaper_card_online_forest_waterfall").assertExists()
+        composeRule.onNodeWithTag("wallpaper_card_online_emerald_forest").assertExists()
         // Verify duplicate ThemePreset wallpapers were removed from the static wallpaper grid
         assertTrue(composeRule.onAllNodesWithTag("wallpaper_card_sport_real_madrid").fetchSemanticsNodes().isEmpty())
         assertTrue(composeRule.onAllNodesWithTag("wallpaper_card_flag_algeria").fetchSemanticsNodes().isEmpty())
@@ -443,9 +452,51 @@ class HomeScreenTilesTest {
         composeRule.onNodeWithTag("wallpaper_card_earth").assertExists()
         composeRule.onNodeWithTag("wallpaper_card_sport_algeria_fennecs").assertExists()
         composeRule.onNodeWithTag("wallpaper_card_sport_brazil_light").assertExists()
+        // Switch to Online Nature filter and ensure the 5 online cards remain directly accessible
+        composeRule.onNodeWithTag("wallpaper_filter_online").performScrollTo().performClick()
+        composeRule.onNodeWithTag("wallpaper_card_online_ocean_big_sur").assertExists()
+        assertTrue(composeRule.onAllNodesWithTag("wallpaper_card_video_earth_space").fetchSemanticsNodes().isEmpty())
+        composeRule.onNodeWithTag("wallpaper_filter_all").performScrollTo().performClick()
         composeRule.onNodeWithTag("clear_custom_wallpaper_btn").performScrollTo().assertIsDisplayed().performClick()
         assertEquals(null, latestSettings.customWallpaperUri)
         assertEquals(false, latestSettings.customWallpaperIsVideo)
+    }
+
+    @Test
+    fun onlineNatureWallpapers_exposeFivePresetsAndSelectOptimalDerivativeStream() {
+        val presets = com.example.data.OnlineVideoWallpaperRepository.presets
+        assertEquals(5, presets.size)
+        presets.forEach { preset ->
+            assertTrue(com.example.ui.components.isBuiltInVideoWallpaper(preset.id))
+            assertTrue(com.example.ui.components.wallpaperDrawableRes(preset.id) != null)
+            assertTrue(preset.fallbackStreamUrl.startsWith("https://"))
+        }
+
+        val sampleApiJson = """
+            {
+              "query": {
+                "pages": {
+                  "12345": {
+                    "videoinfo": [
+                      {
+                        "url": "//upload.wikimedia.org/wikipedia/commons/5/52/Original_4K.webm",
+                        "derivatives": [
+                          {"src": "//upload.wikimedia.org/wikipedia/commons/transcoded/sample/360p.vp9.webm", "type": "video/webm; codecs=\"vp9\"", "height": 360},
+                          {"src": "//upload.wikimedia.org/wikipedia/commons/transcoded/sample/720p.vp9.webm", "type": "video/webm; codecs=\"vp9\"", "height": 720},
+                          {"src": "//upload.wikimedia.org/wikipedia/commons/5/52/Original_4K.webm", "type": "video/webm; codecs=\"vp9\"", "height": 2160}
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+        val chosen = com.example.data.OnlineVideoWallpaperRepository.selectBestStreamFromApiJson(sampleApiJson)
+        assertEquals(
+            "https://upload.wikimedia.org/wikipedia/commons/transcoded/sample/720p.vp9.webm",
+            chosen,
+        )
     }
 
     @OptIn(ExperimentalTestApi::class)
