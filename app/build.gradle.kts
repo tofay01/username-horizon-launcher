@@ -145,16 +145,25 @@ dependencies {
   "ksp"(libs.moshi.kotlin.codegen)
 }
 
+val exportedApkVersionName = android.defaultConfig.versionName ?: "1.19"
+
 val syncBuildOutputsApk = tasks.register<Copy>("syncBuildOutputsApk") {
   dependsOn("assembleDebug")
   from(layout.buildDirectory.file("outputs/apk/debug/app-debug.apk"))
   into(rootProject.layout.projectDirectory.dir(".build-outputs"))
-  rename { "app-debug.apk" }
+  rename("app-debug.apk", "app-debug.apk")
+}
+
+val syncVersionedApk = tasks.register<Copy>("syncVersionedApk") {
+  dependsOn("assembleDebug")
+  from(layout.buildDirectory.file("outputs/apk/debug/app-debug.apk"))
+  into(rootProject.layout.projectDirectory.dir("apk"))
+  rename("app-debug.apk", "HorizonLauncher_v$exportedApkVersionName.apk")
 }
 
 tasks.register<Copy>("exportApk") {
-  dependsOn("assembleDebug", syncBuildOutputsApk)
+  dependsOn("assembleDebug", syncBuildOutputsApk, syncVersionedApk)
   from(layout.buildDirectory.file("outputs/apk/debug/app-debug.apk"))
   into(rootProject.layout.projectDirectory.dir("apk"))
-  rename { "HorizonLauncher.apk" }
+  rename("app-debug.apk", "HorizonLauncher.apk")
 }
