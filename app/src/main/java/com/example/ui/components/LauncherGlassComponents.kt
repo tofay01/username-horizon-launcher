@@ -93,8 +93,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Shape
@@ -135,7 +133,7 @@ import kotlin.math.roundToInt
 val LocalTvFocusEnabled = compositionLocalOf { true }
 
 fun wallpaperDrawableRes(wallpaperId: String): Int? = when (wallpaperId) {
-    "earth", "earth_silver", "earth_gold", "earth_zellige", "earth_pharaoh" -> R.drawable.img_wallpaper_earth
+    "earth" -> R.drawable.img_wallpaper_earth
     "aurora" -> R.drawable.img_wallpaper_aurora
     "amber_night" -> R.drawable.img_wallpaper_amber_night
     "cobalt_waves" -> R.drawable.img_wallpaper_cobalt_waves
@@ -143,26 +141,13 @@ fun wallpaperDrawableRes(wallpaperId: String): Int? = when (wallpaperId) {
     "sport_barcelona" -> R.drawable.img_sport_barcelona
     "sport_man_city" -> R.drawable.img_sport_man_city
     "sport_psg" -> R.drawable.img_sport_psg
-    "sport_brazil" -> R.drawable.img_sport_brazil
     "sport_brazil_light" -> R.drawable.img_sport_brazil_light
-    "sport_argentina" -> R.drawable.img_sport_argentina
-    "sport_france" -> R.drawable.img_sport_france
-    "sport_spain" -> R.drawable.img_sport_spain
-    "sport_egypt" -> R.drawable.img_sport_egypt
-    "sport_algeria" -> R.drawable.img_sport_algeria
     "sport_algeria_fennecs" -> R.drawable.img_sport_algeria_fennecs
-    "sport_saudi_arabia" -> R.drawable.img_sport_saudi_arabia
-    "sport_tunisia" -> R.drawable.img_sport_tunisia
     "video_earth_space" -> R.drawable.thumb_video_earth_space
     "video_emerald_nebula" -> R.drawable.thumb_video_emerald_nebula
     "video_crimson_nebula" -> R.drawable.thumb_video_crimson_nebula
     "video_cobalt_fractal" -> R.drawable.thumb_video_cobalt_fractal
     "video_violet_nebula" -> R.drawable.thumb_video_violet_nebula
-    "cinema_classic" -> R.drawable.img_cinema_classic
-    "anime_grendizer" -> R.drawable.img_anime_grendizer
-    "anime_remi" -> R.drawable.img_anime_remi
-    "anime_sandybell" -> R.drawable.img_anime_sandybell
-    "anime_dbz" -> R.drawable.img_anime_dbz
     else -> null
 }
 
@@ -202,27 +187,11 @@ fun LauncherWallpaperLayer(
         } else {
             val posterResId = wallpaperDrawableRes(settings.wallpaperId)
                 ?: wallpaperDrawableRes(settings.themePreset.defaultWallpaperId)
-            val proceduralId = when {
-                hasBuiltInArtworkWallpaper(settings.wallpaperId) -> settings.wallpaperId
-                posterResId == null && hasBuiltInArtworkWallpaper(settings.themePreset.defaultWallpaperId) ->
-                    settings.themePreset.defaultWallpaperId
-                else -> null
-            }
             if (posterResId != null) {
-                val activeWpId = if (wallpaperDrawableRes(settings.wallpaperId) != null) {
-                    settings.wallpaperId
-                } else {
-                    settings.themePreset.defaultWallpaperId
-                }
-                EarthTintedWallpaperImage(
-                    wallpaperId = activeWpId,
-                    resId = posterResId,
+                Image(
+                    painter = painterResource(id = posterResId),
                     contentDescription = "Launcher wallpaper",
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else if (proceduralId != null) {
-                ProceduralThemeWallpaper(
-                    wallpaperId = proceduralId,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {
@@ -1268,115 +1237,6 @@ fun buildFuturisticDockPath(
         lineTo(r, h)
         quadraticTo(0f, h, 0f, h - r)
         close()
-    }
-}
-
-@Composable
-fun EarthTintedWallpaperImage(
-    wallpaperId: String,
-    resId: Int,
-    contentDescription: String?,
-    modifier: Modifier = Modifier,
-) {
-    val colorFilter = remember(wallpaperId) {
-        when (wallpaperId) {
-            "earth_silver" -> ColorFilter.colorMatrix(
-                ColorMatrix().apply {
-                    setToSaturation(0.24f)
-                }
-            )
-            "earth_gold" -> ColorFilter.colorMatrix(
-                ColorMatrix(
-                    floatArrayOf(
-                        1.18f, 0.14f, 0f, 0f, 14f,
-                        0.08f, 0.88f, 0f, 0f, 4f,
-                        0f, 0f, 0.42f, 0f, -10f,
-                        0f, 0f, 0f, 1f, 0f,
-                    )
-                )
-            )
-            "earth_pharaoh" -> ColorFilter.colorMatrix(
-                ColorMatrix(
-                    floatArrayOf(
-                        1.20f, 0.16f, 0f, 0f, 18f,
-                        0.10f, 0.92f, 0f, 0f, 8f,
-                        0f, 0f, 0.44f, 0f, -8f,
-                        0f, 0f, 0f, 1f, 0f,
-                    )
-                )
-            )
-            "earth_zellige" -> ColorFilter.colorMatrix(
-                ColorMatrix(
-                    floatArrayOf(
-                        0.92f, 0.08f, 0f, 0f, 4f,
-                        0.05f, 1.08f, 0.06f, 0f, 6f,
-                        0f, 0.08f, 0.88f, 0f, 2f,
-                        0f, 0f, 0f, 1f, 0f,
-                    )
-                )
-            )
-            else -> null
-        }
-    }
-
-    Box(modifier = modifier) {
-        Image(
-            painter = painterResource(id = resId),
-            contentDescription = contentDescription,
-            contentScale = ContentScale.Crop,
-            colorFilter = colorFilter,
-            modifier = Modifier.fillMaxSize(),
-        )
-        when (wallpaperId) {
-            "earth_silver" -> Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFFE2E8F0).copy(alpha = 0.12f),
-                                Color(0xFF0F172A).copy(alpha = 0.24f),
-                            )
-                        )
-                    )
-            )
-            "earth_gold" -> Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFFF59E0B).copy(alpha = 0.14f),
-                                Color(0xFF1F1108).copy(alpha = 0.34f),
-                            )
-                        )
-                    )
-            )
-            "earth_zellige" -> Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFF10B981).copy(alpha = 0.12f),
-                                Color(0xFF041D1B).copy(alpha = 0.28f),
-                            )
-                        )
-                    )
-            )
-            "earth_pharaoh" -> Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFFFACC15).copy(alpha = 0.14f),
-                                Color(0xFF231607).copy(alpha = 0.34f),
-                            )
-                        )
-                    )
-            )
-        }
     }
 }
 

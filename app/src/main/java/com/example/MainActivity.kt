@@ -122,7 +122,7 @@ fun HorizonLauncherRoot(
     val unknownSourcesLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
         onResult = {
-            viewModel.retryInstallDownloadedApk()
+            viewModel.retryInstallDownloadedApk(onlyIfAwaitingPermission = true)
         }
     )
 
@@ -130,7 +130,7 @@ fun HorizonLauncherRoot(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 viewModel.refreshInstalledApps()
-                viewModel.retryInstallDownloadedApk()
+                viewModel.retryInstallDownloadedApk(onlyIfAwaitingPermission = true)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -211,6 +211,15 @@ fun HorizonLauncherRoot(
                             }
                         },
                         onCycleLanguage = viewModel::cycleLanguage,
+                        onOpenRadio = viewModel::openRadioPicker,
+                        onPlayRadioStation = viewModel::playRadioStation,
+                        onToggleRadioPlayPause = viewModel::toggleRadioPlayPause,
+                        onRefreshRadio = { viewModel.loadLocalRadioStations() },
+                        onSelectRadioCountry = viewModel::setRadioCountryFilter,
+                        onSearchRadio = viewModel::searchRadioStations,
+                        onToggleFavoriteRadioStation = viewModel::toggleFavoriteRadioStation,
+                        onRefreshNews = { viewModel.refreshNewsTicker() },
+                        onOpenNewsArticle = viewModel::openNewsArticleUrl,
                         renderContextDialog = false,
                     )
 

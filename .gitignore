@@ -12,6 +12,7 @@
 /build
 **/build/
 /.build-outputs/
+/apk/*.apk
 /.aistudio/
 /public/
 /captures

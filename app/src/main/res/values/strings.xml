@@ -4,6 +4,9 @@
     <string name="adhan_channel_name">Alertes Adhan et Prière</string>
     <string name="adhan_channel_desc">Notifications et diffusion audio des heures de prière</string>
     <string name="adhan_stop_action">Arrêter l\'Adhan</string>
+    <string name="radio_channel_name">Radio Locale Horizon</string>
+    <string name="radio_channel_desc">Diffusion audio en direct des stations de radio locales</string>
+    <string name="radio_stop_action">Arrêter la radio</string>
     <string name="accessibility_power_service_desc">Permet au bouton d\'alimentation du lanceur Horizon de mettre le téléviseur en veille.</string>
     <string name="device_admin_power_label">Horizon Power (Veille TV)</string>
 </resources>

@@ -2,6 +2,7 @@ package com.example.update
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -77,6 +78,22 @@ sealed interface AppUpdateUiState {
         val apkFilePath: String,
         val needsInstallPermission: Boolean,
     ) : AppUpdateUiState
+}
+
+enum class ApkValidationFailure {
+    CORRUPT_ARCHIVE,
+    PACKAGE_MISMATCH,
+    NOT_NEWER_THAN_INSTALLED,
+    RELEASE_ASSET_OUTDATED,
+}
+
+sealed interface DownloadedApkValidation {
+    data class Valid(val versionCode: Long, val versionName: String) : DownloadedApkValidation
+    data class Invalid(
+        val failure: ApkValidationFailure,
+        val archiveVersionName: String? = null,
+        val archiveVersionCode: Long? = null,
+    ) : DownloadedApkValidation
 }
 
 interface GitHubReleasesApi {
@@ -231,6 +248,43 @@ class GitHubUpdateRepository(private val context: Context) {
         }
     }
 
+    @Suppress("DEPRECATION")
+    fun validateDownloadedApk(
+        apkFile: File,
+        expectedVersionTag: String,
+        currentVersionName: String = BuildConfig.VERSION_NAME,
+        currentVersionCode: Long = BuildConfig.VERSION_CODE.toLong(),
+    ): DownloadedApkValidation {
+        if (!apkFile.exists() || apkFile.length() <= 0L) {
+            return DownloadedApkValidation.Invalid(ApkValidationFailure.CORRUPT_ARCHIVE)
+        }
+        val pkgInfo = runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageArchiveInfo(
+                    apkFile.absolutePath,
+                    PackageManager.PackageInfoFlags.of(0L),
+                )
+            } else {
+                context.packageManager.getPackageArchiveInfo(apkFile.absolutePath, 0)
+            }
+        }.getOrNull() ?: return DownloadedApkValidation.Invalid(ApkValidationFailure.CORRUPT_ARCHIVE)
+
+        val archiveVersionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            pkgInfo.longVersionCode
+        } else {
+            pkgInfo.versionCode.toLong()
+        }
+        return validateArchiveMetadata(
+            archivePackageName = pkgInfo.packageName,
+            expectedPackageName = context.packageName,
+            archiveVersionCode = archiveVersionCode,
+            archiveVersionName = pkgInfo.versionName.orEmpty(),
+            expectedVersionTag = expectedVersionTag,
+            currentVersionCode = currentVersionCode,
+            currentVersionName = currentVersionName,
+        )
+    }
+
     fun launchApkInstaller(apkFilePath: String): Boolean {
         val apkFile = File(apkFilePath)
         if (!apkFile.exists() || apkFile.length() <= 0L) return false
@@ -251,6 +305,51 @@ class GitHubUpdateRepository(private val context: Context) {
     }
 
     companion object {
+        fun validateArchiveMetadata(
+            archivePackageName: String?,
+            expectedPackageName: String,
+            archiveVersionCode: Long,
+            archiveVersionName: String,
+            expectedVersionTag: String,
+            currentVersionCode: Long,
+            currentVersionName: String,
+        ): DownloadedApkValidation {
+            if (archivePackageName != expectedPackageName) {
+                return DownloadedApkValidation.Invalid(
+                    failure = ApkValidationFailure.PACKAGE_MISMATCH,
+                    archiveVersionName = archiveVersionName.takeIf { it.isNotBlank() },
+                    archiveVersionCode = archiveVersionCode,
+                )
+            }
+            val cleanName = archiveVersionName.trim()
+            if (archiveVersionCode < currentVersionCode) {
+                return DownloadedApkValidation.Invalid(
+                    failure = ApkValidationFailure.NOT_NEWER_THAN_INSTALLED,
+                    archiveVersionName = cleanName.takeIf { it.isNotBlank() },
+                    archiveVersionCode = archiveVersionCode,
+                )
+            }
+            val isNewerThanInstalled = archiveVersionCode > currentVersionCode ||
+                (cleanName.isNotBlank() && isNewerVersion(cleanName, currentVersionName))
+            if (!isNewerThanInstalled) {
+                return DownloadedApkValidation.Invalid(
+                    failure = ApkValidationFailure.NOT_NEWER_THAN_INSTALLED,
+                    archiveVersionName = cleanName.takeIf { it.isNotBlank() },
+                    archiveVersionCode = archiveVersionCode,
+                )
+            }
+            if (cleanName.isNotBlank() && isNewerVersion(expectedVersionTag, cleanName)) {
+                return DownloadedApkValidation.Invalid(
+                    failure = ApkValidationFailure.RELEASE_ASSET_OUTDATED,
+                    archiveVersionName = cleanName,
+                    archiveVersionCode = archiveVersionCode,
+                )
+            }
+            return DownloadedApkValidation.Valid(
+                versionCode = archiveVersionCode,
+                versionName = cleanName,
+            )
+        }
         private val REPO_SLUG_REGEX = Regex("^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$")
 
         fun normalizeRepoSlug(rawInput: String): String? {

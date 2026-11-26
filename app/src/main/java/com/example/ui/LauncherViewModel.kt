@@ -9,7 +9,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.InstalledAppsRepository
 import com.example.data.LauncherPreferencesRepository
 import com.example.data.LocationWeatherRepository
+import com.example.data.NewsFetchResult
+import com.example.data.NewsTickerRepository
 import com.example.data.PrayerTimesRepository
+import com.example.data.RadioFetchResult
+import com.example.data.RadioRepository
 import com.example.model.AdhanAlertMode
 import com.example.model.AiToolPreset
 import com.example.model.AppIconShape
@@ -25,15 +29,22 @@ import com.example.model.LauncherLanguage
 import com.example.model.LauncherSettings
 import com.example.model.LauncherStrings
 import com.example.model.NetworkStatus
+import com.example.model.NewsArticle
 import com.example.model.NextPrayerInfo
 import com.example.model.PrayerKey
 import com.example.model.PrayerTimesData
+import com.example.model.RadioPlaybackStatus
+import com.example.model.RadioStation
 import com.example.model.ThemePreset
 import com.example.model.WeatherData
 import com.example.prayer.AdhanPlaybackService
 import com.example.prayer.AdhanScheduler
 import com.example.prayer.OfflinePrayerCalculator
+import com.example.radio.RadioPlaybackService
+import com.example.radio.RadioPlaybackState
+import com.example.update.ApkValidationFailure
 import com.example.update.AppUpdateUiState
+import com.example.update.DownloadedApkValidation
 import com.example.update.GitHubUpdateRepository
 import com.example.update.UpdateCheckResult
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -80,6 +91,33 @@ data class LauncherUiState(
     val isAdhanPlaying: Boolean = false,
     val hasLocationPermission: Boolean = false,
     val updateState: AppUpdateUiState = AppUpdateUiState.Idle,
+    val radioStations: List<RadioStation> = emptyList(),
+    val isLoadingRadio: Boolean = false,
+    val radioError: String? = null,
+    val radioDetectedCountryCode: String = "FR",
+    val radioFilterCountryCode: String? = "FR",
+    val radioSearchQuery: String = "",
+    val radioStatus: RadioPlaybackStatus = RadioPlaybackStatus.IDLE,
+    val activeRadioStation: RadioStation? = null,
+    val radioPlaybackError: String? = null,
+    val newsArticles: List<NewsArticle> = emptyList(),
+    val isLoadingNews: Boolean = false,
+    val newsError: String? = null,
+)
+
+private data class RadioLibraryState(
+    val stations: List<RadioStation> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val detectedCountryCode: String = "FR",
+    val filterCountryCode: String? = "FR",
+    val searchQuery: String = "",
+)
+
+private data class NewsFeedState(
+    val articles: List<NewsArticle> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
 )
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
@@ -88,6 +126,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val appsRepo = InstalledAppsRepository(application)
     private val locationWeatherRepo = LocationWeatherRepository(application)
     private val prayerRepo = PrayerTimesRepository()
+    private val radioRepo = RadioRepository(application)
+    private val newsRepo = NewsTickerRepository()
     private val adhanScheduler = AdhanScheduler(application)
     private val updateRepo = GitHubUpdateRepository(application)
 
@@ -113,9 +153,14 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val statusMessageFlow = MutableStateFlow<String?>(null)
     private val locationPermFlow = MutableStateFlow(runCatching { locationWeatherRepo.hasLocationPermission() }.getOrDefault(false))
     private val updateStateFlow = MutableStateFlow<AppUpdateUiState>(AppUpdateUiState.Idle)
+    private val radioLibraryFlow = MutableStateFlow(RadioLibraryState())
+    private val newsStateFlow = MutableStateFlow(NewsFeedState())
 
     private var lastLoadedLocationKey: String? = null
+    private var lastNewsFetchKey: String? = null
     private var hasAutoCheckedUpdates = false
+    private var radioLoadJob: kotlinx.coroutines.Job? = null
+    private var newsLoadJob: kotlinx.coroutines.Job? = null
 
     private val initialUiState: LauncherUiState = buildInitialUiState()
 
@@ -136,6 +181,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         AdhanPlaybackService.isPlaying,
         locationPermFlow,
         updateStateFlow,
+        radioLibraryFlow,
+        RadioPlaybackService.playbackState,
+        newsStateFlow,
     ) { arr ->
         val settings = arr[0] as LauncherSettings
         val dest = arr[1] as LauncherDestination
@@ -155,6 +203,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         val adhanPlaying = arr[13] as Boolean
         val hasLocPerm = arr[14] as Boolean
         val updateState = arr[15] as AppUpdateUiState
+        val radioLib = arr[16] as RadioLibraryState
+        val radioPlayback = arr[17] as RadioPlaybackState
+        val newsFeed = arr[18] as NewsFeedState
 
         val orderedAll = applyCustomOrder(allApps, settings.customAppOrder)
         val visibleOrdered = orderedAll.filterNot { settings.hiddenPackages.contains(it.packageName) }
@@ -183,6 +234,14 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
 
         val (timeFmt, dateFmt, greeting) = formatClockAndGreeting(nowMillis, settings)
+        val effectiveActiveStation = radioPlayback.activeStation ?: if (settings.selectedRadioStreamUrl.isNotBlank()) {
+            RadioStation(
+                stationUuid = settings.selectedRadioStationId.ifBlank { settings.selectedRadioStreamUrl },
+                name = settings.selectedRadioStationName.ifBlank { "Horizon Radio" },
+                streamUrl = settings.selectedRadioStreamUrl,
+                countryCode = settings.selectedRadioCountryCode,
+            )
+        } else null
 
         LauncherUiState(
             settings = settings,
@@ -207,6 +266,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             isAdhanPlaying = adhanPlaying,
             hasLocationPermission = hasLocPerm,
             updateState = updateState,
+            radioStations = radioLib.stations,
+            isLoadingRadio = radioLib.isLoading,
+            radioError = radioLib.errorMessage,
+            radioDetectedCountryCode = radioLib.detectedCountryCode,
+            radioFilterCountryCode = radioLib.filterCountryCode,
+            radioSearchQuery = radioLib.searchQuery,
+            radioStatus = radioPlayback.status,
+            activeRadioStation = effectiveActiveStation,
+            radioPlaybackError = radioPlayback.errorMessage,
+            newsArticles = newsFeed.articles,
+            isLoadingNews = newsFeed.isLoading,
+            newsError = newsFeed.errorMessage,
         )
     }.distinctUntilChanged().catch {
         emit(initialUiState)
@@ -282,6 +353,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         refreshInstalledApps()
         startClockAndNetworkTicker()
         observeSettingsForData()
+        startNewsAutoRefreshLoop()
     }
 
     private fun startClockAndNetworkTicker() {
@@ -360,6 +432,21 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 if (key != lastLoadedLocationKey) {
                     lastLoadedLocationKey = key
                     refreshPrayerAndWeather(settings)
+                    val resolvedCountry = runCatching { radioRepo.resolveCountryCode(settings) }.getOrDefault("FR")
+                    radioLibraryFlow.value = radioLibraryFlow.value.copy(
+                        detectedCountryCode = resolvedCountry,
+                        filterCountryCode = resolvedCountry,
+                    )
+                    if (radioLibraryFlow.value.stations.isNotEmpty()) {
+                        loadRadioStations(countryCode = resolvedCountry, query = radioLibraryFlow.value.searchQuery)
+                    }
+                }
+                if (settings.showNewsTicker) {
+                    val newsKey = "${settings.language.code}:${settings.enabledNewsCategories.map { it.id }.sorted().joinToString(",")}"
+                    if (newsKey != lastNewsFetchKey) {
+                        lastNewsFetchKey = newsKey
+                        refreshNewsTicker(settings)
+                    }
                 }
                 if (!hasAutoCheckedUpdates &&
                     settings.autoCheckUpdatesOnStartup &&
@@ -370,6 +457,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                         delay(1500L)
                         checkForUpdates(silent = true, overrideSettings = settings)
                     }
+                }
+            }
+        }
+    }
+
+    private fun startNewsAutoRefreshLoop() {
+        safeLaunch {
+            while (isActive) {
+                delay(15 * 60 * 1000L)
+                val s = uiState.value.settings
+                if (s.showNewsTicker && s.enabledNewsCategories.isNotEmpty()) {
+                    refreshNewsTicker(s)
                 }
             }
         }
@@ -858,6 +957,141 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         showStatus("Source : $source")
     }
 
+    fun openRadioPicker() {
+        val current = radioLibraryFlow.value
+        if (current.stations.isEmpty() && !current.isLoading) {
+            loadLocalRadioStations()
+        }
+    }
+
+    fun loadLocalRadioStations(
+        countryCodeOverride: String? = radioLibraryFlow.value.filterCountryCode,
+        query: String = radioLibraryFlow.value.searchQuery,
+    ) {
+        radioLoadJob?.cancel()
+        radioLoadJob = safeLaunch {
+            val s = uiState.value.settings
+            val detected = runCatching { radioRepo.resolveCountryCode(s) }.getOrDefault("FR")
+            val activeCountry = countryCodeOverride
+            radioLibraryFlow.value = radioLibraryFlow.value.copy(
+                isLoading = true,
+                errorMessage = null,
+                detectedCountryCode = detected,
+                filterCountryCode = activeCountry,
+                searchQuery = query,
+            )
+            when (val res = radioRepo.fetchStations(countryCode = activeCountry, query = query)) {
+                is RadioFetchResult.Success -> {
+                    radioLibraryFlow.value = radioLibraryFlow.value.copy(
+                        stations = res.stations,
+                        isLoading = false,
+                        errorMessage = null,
+                    )
+                }
+                is RadioFetchResult.Failure -> {
+                    radioLibraryFlow.value = radioLibraryFlow.value.copy(
+                        isLoading = false,
+                        errorMessage = res.errorMessage,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun loadRadioStations(countryCode: String?, query: String) {
+        loadLocalRadioStations(countryCodeOverride = countryCode, query = query)
+    }
+
+    fun setRadioCountryFilter(countryCode: String?) {
+        loadLocalRadioStations(countryCodeOverride = countryCode, query = radioLibraryFlow.value.searchQuery)
+    }
+
+    fun searchRadioStations(query: String) {
+        loadLocalRadioStations(countryCodeOverride = radioLibraryFlow.value.filterCountryCode, query = query)
+    }
+
+    fun playRadioStation(station: RadioStation) {
+        val context = getApplication<Application>()
+        updateSettings { s ->
+            s.copy(
+                selectedRadioStationId = station.stationUuid,
+                selectedRadioStationName = station.name,
+                selectedRadioStreamUrl = station.streamUrl,
+                selectedRadioCountryCode = station.countryCode,
+            )
+        }
+        RadioPlaybackService.playStation(context, station)
+    }
+
+    fun stopRadio() {
+        RadioPlaybackService.stopRadio(getApplication())
+    }
+
+    fun toggleRadioPlayPause() {
+        val state = uiState.value
+        if (state.radioStatus == RadioPlaybackStatus.PLAYING || state.radioStatus == RadioPlaybackStatus.LOADING) {
+            stopRadio()
+        } else {
+            val target = state.activeRadioStation ?: state.radioStations.firstOrNull()
+            if (target != null) {
+                playRadioStation(target)
+            }
+        }
+    }
+
+    fun toggleFavoriteRadioStation(stationUuid: String) {
+        updateSettings { s ->
+            val favs = s.favoriteRadioStationIds.toMutableSet()
+            if (favs.contains(stationUuid)) favs.remove(stationUuid) else favs.add(stationUuid)
+            s.copy(favoriteRadioStationIds = favs)
+        }
+    }
+
+    fun refreshNewsTicker(overrideSettings: LauncherSettings? = null) {
+        val s = overrideSettings ?: uiState.value.settings
+        newsLoadJob?.cancel()
+        if (!s.showNewsTicker) return
+        if (s.enabledNewsCategories.isEmpty()) {
+            newsStateFlow.value = NewsFeedState(articles = emptyList(), isLoading = false, errorMessage = null)
+            return
+        }
+        newsLoadJob = safeLaunch {
+            newsStateFlow.value = newsStateFlow.value.copy(isLoading = true, errorMessage = null)
+            when (val res = newsRepo.fetchNews(language = s.language, enabledCategories = s.enabledNewsCategories)) {
+                is NewsFetchResult.Success -> {
+                    newsStateFlow.value = NewsFeedState(
+                        articles = res.articles,
+                        isLoading = false,
+                        errorMessage = null,
+                    )
+                }
+                is NewsFetchResult.Failure -> {
+                    newsStateFlow.value = newsStateFlow.value.copy(
+                        isLoading = false,
+                        errorMessage = res.errorMessage,
+                    )
+                }
+            }
+        }
+    }
+
+    fun openNewsArticleUrl(rawUrl: String) {
+        val trimmed = rawUrl.trim()
+        val parsed = runCatching { Uri.parse(trimmed) }.getOrNull() ?: return
+        val scheme = parsed.scheme?.lowercase()
+        if (scheme != "https" && scheme != "http") return
+        val intent = Intent(Intent.ACTION_VIEW, parsed).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        val opened = runCatching {
+            getApplication<Application>().startActivity(intent)
+            true
+        }.getOrDefault(false)
+        if (!opened) {
+            showStatus(LauncherStrings.get(uiState.value.settings.language).newsOfflineError)
+        }
+    }
+
     fun executeGesture(type: GestureType) {
         val action = uiState.value.settings.gestureShortcuts[type] ?: return
         when (action) {
@@ -977,14 +1211,34 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 )
             }
             result.onSuccess { file ->
-                val canInstall = updateRepo.canInstallPackages()
-                updateStateFlow.value = AppUpdateUiState.ReadyToInstall(
-                    info = info,
-                    apkFilePath = file.absolutePath,
-                    needsInstallPermission = !canInstall,
-                )
-                if (canInstall) {
-                    updateRepo.launchApkInstaller(file.absolutePath)
+                when (val validation = updateRepo.validateDownloadedApk(file, info.versionTag)) {
+                    is DownloadedApkValidation.Invalid -> {
+                        runCatching { file.delete() }
+                        updateStateFlow.value = AppUpdateUiState.Idle
+                        val detail = when (validation.failure) {
+                            ApkValidationFailure.NOT_NEWER_THAN_INSTALLED,
+                            ApkValidationFailure.RELEASE_ASSET_OUTDATED -> {
+                                val actual = validation.archiveVersionName?.let { "v$it" } ?: "?"
+                                "${strings.updateStaleApkStatus} ($actual → ${info.versionTag})"
+                            }
+                            ApkValidationFailure.PACKAGE_MISMATCH ->
+                                "${strings.updateErrorStatus} (Package mismatch)"
+                            ApkValidationFailure.CORRUPT_ARCHIVE ->
+                                "${strings.updateErrorStatus} (Invalid APK)"
+                        }
+                        showStatus(detail)
+                    }
+                    is DownloadedApkValidation.Valid -> {
+                        val canInstall = updateRepo.canInstallPackages()
+                        updateStateFlow.value = AppUpdateUiState.ReadyToInstall(
+                            info = info,
+                            apkFilePath = file.absolutePath,
+                            needsInstallPermission = !canInstall,
+                        )
+                        if (canInstall) {
+                            updateRepo.launchApkInstaller(file.absolutePath)
+                        }
+                    }
                 }
             }.onFailure { err ->
                 updateStateFlow.value = AppUpdateUiState.Available(info)
@@ -993,12 +1247,24 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun retryInstallDownloadedApk() {
+    fun retryInstallDownloadedApk(onlyIfAwaitingPermission: Boolean = false) {
         val current = updateStateFlow.value as? AppUpdateUiState.ReadyToInstall ?: return
+        if (onlyIfAwaitingPermission && !current.needsInstallPermission) {
+            return
+        }
+        val apkFile = File(current.apkFilePath)
+        if (!apkFile.exists() || apkFile.length() <= 0L) {
+            updateStateFlow.value = AppUpdateUiState.Idle
+            return
+        }
         val canInstall = updateRepo.canInstallPackages()
         updateStateFlow.value = current.copy(needsInstallPermission = !canInstall)
         if (canInstall) {
-            updateRepo.launchApkInstaller(current.apkFilePath)
+            val launched = updateRepo.launchApkInstaller(current.apkFilePath)
+            if (!launched) {
+                val strings = LauncherStrings.get(uiState.value.settings.language)
+                showStatus(strings.updateErrorStatus)
+            }
         }
     }
 

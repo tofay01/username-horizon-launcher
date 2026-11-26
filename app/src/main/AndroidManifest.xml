@@ -97,6 +97,11 @@
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
 
+        <service
+            android:name=".radio.RadioPlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
         <receiver
             android:name=".power.HorizonDeviceAdminReceiver"
             android:exported="true"

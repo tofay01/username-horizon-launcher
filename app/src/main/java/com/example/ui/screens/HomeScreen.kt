@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
@@ -49,6 +50,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.LocationOn
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Star
@@ -59,9 +61,11 @@ import com.example.ui.icons.GraphicEq
 import com.example.ui.icons.Input
 import com.example.ui.icons.OpenInNew
 import com.example.ui.icons.PowerSettingsNew
+import com.example.ui.icons.Radio
 import com.example.ui.icons.SettingsEthernet
 import com.example.ui.icons.SignalCellularAlt
 import com.example.ui.icons.StarBorder
+import com.example.ui.icons.Stop
 import com.example.ui.icons.VisibilityOff
 import com.example.ui.icons.Wifi
 import com.example.ui.icons.WifiOff
@@ -116,13 +120,14 @@ import com.example.model.LauncherLanguage
 import com.example.model.LauncherStrings
 import com.example.model.LocalizedStrings
 import com.example.model.NetworkType
+import com.example.model.RadioPlaybackStatus
+import com.example.model.RadioStation
 import com.example.ui.LauncherUiState
 import com.example.ui.components.AppIconCard
 import com.example.ui.components.ConcentricOrbitBackdrop
 import com.example.ui.components.ContrastText
 import com.example.ui.components.FocusSoundPlayer
 import com.example.ui.components.FuturisticDockContainer
-import com.example.ui.components.LauncherThemeFrameOverlay
 import com.example.ui.components.LocalNavigationSoundEnabled
 import com.example.ui.components.LocalTvFocusEnabled
 import com.example.ui.components.OrbitAllAppsButton
@@ -131,6 +136,7 @@ import com.example.ui.components.OrbitGreetingPill
 import com.example.ui.components.OrbitLanguageCycleButton
 import com.example.ui.components.ThemedClockDisplay
 import com.example.ui.components.TvFocusableSurface
+import com.example.ui.components.TvNewsTickerBar
 import com.example.ui.components.drawableToImageBitmap
 import com.example.ui.components.weatherIconForCode
 import com.example.ui.theme.DeepSpaceBlack
@@ -162,17 +168,27 @@ fun HomeScreen(
     onLaunchAiTool: (String) -> Unit = {},
     onPowerOffTv: () -> Unit = {},
     onCycleLanguage: () -> Unit = {},
+    onOpenRadio: () -> Unit = {},
+    onPlayRadioStation: (RadioStation) -> Unit = {},
+    onToggleRadioPlayPause: () -> Unit = {},
+    onRefreshRadio: () -> Unit = {},
+    onSelectRadioCountry: (String?) -> Unit = {},
+    onSearchRadio: (String) -> Unit = {},
+    onToggleFavoriteRadioStation: (String) -> Unit = {},
+    onRefreshNews: () -> Unit = {},
+    onOpenNewsArticle: (String) -> Unit = {},
     renderContextDialog: Boolean = true,
 ) {
     val settings = state.settings
     val strings = LauncherStrings.get(settings.language)
     val accent = settings.accentColor
-    val rimAccent = settings.rimAccentColor
 
     var dragX by remember { mutableFloatStateOf(0f) }
     var dragY by remember { mutableFloatStateOf(0f) }
     var showAiToolsPicker by remember { mutableStateOf(false) }
     var aiToolToRemove by remember { mutableStateOf<String?>(null) }
+    var showRadioDialog by remember { mutableStateOf(false) }
+    var showNewsDialog by remember { mutableStateOf(false) }
 
     val centerFavFocusRequester = remember { FocusRequester() }
     val settingsPillFocusRequester = remember { FocusRequester() }
@@ -183,19 +199,14 @@ fun HomeScreen(
     BackHandler(enabled = isHomeActive && aiToolToRemove != null) {
         aiToolToRemove = null
     }
+    BackHandler(enabled = isHomeActive && showRadioDialog) {
+        showRadioDialog = false
+    }
+    BackHandler(enabled = isHomeActive && showNewsDialog) {
+        showNewsDialog = false
+    }
 
     CompositionLocalProvider(LocalTvFocusEnabled provides isHomeActive) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            BoxWithConstraints(
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                LauncherThemeFrameOverlay(
-                    skinStyle = settings.themePreset.skinStyle,
-                    rimColor = rimAccent,
-                    isCompact = maxWidth < 640.dp,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
@@ -640,7 +651,7 @@ fun HomeScreen(
                                     accent = accent,
                                     enhancedContrast = settings.enhancedContrast,
                                     isCompact = isCompactWidth,
-                                    rimColor = rimAccent,
+                                    rimColor = accent,
                                 )
                             }
                             OrbitLanguageCycleButton(
@@ -651,7 +662,7 @@ fun HomeScreen(
                                 contentDescription = strings.languageSwitchLabel,
                                 isCompact = isCompactWidth,
                                 onClick = onCycleLanguage,
-                                rimColor = rimAccent,
+                                rimColor = accent,
                             )
                         }
 
@@ -663,6 +674,11 @@ fun HomeScreen(
                             onAddClick = { showAiToolsPicker = true },
                             onLaunchTool = onLaunchAiTool,
                             onLongPressTool = { key -> aiToolToRemove = key },
+                            onRadioClick = {
+                                onOpenRadio()
+                                showRadioDialog = true
+                            },
+                            onRadioPlayPauseClick = onToggleRadioPlayPause,
                             onOpenNetworkSettings = onOpenNetworkSettings,
                             onSearchClick = { onNavigate(LauncherDestination.SEARCH_APPS) },
                             onSettingsClick = { onNavigate(LauncherDestination.SETTINGS_MENU) },
@@ -688,7 +704,7 @@ fun HomeScreen(
                             surfaceColor = Color(settings.themePreset.surfaceHex),
                             glassAlpha = pillGlassAlpha,
                             modifier = Modifier.matchParentSize(),
-                            rimColor = rimAccent,
+                            rimColor = accent,
                         )
 
                         Column(
@@ -822,7 +838,7 @@ fun HomeScreen(
                                 crestHeight = crestHeightDp,
                                 cornerRadius = (settings.cardCornerRadiusDp + 4).dp,
                                 modifier = Modifier.fillMaxWidth(dockWidthFraction).testTag("home_favorites_dock"),
-                                rimColor = rimAccent,
+                                rimColor = accent,
                             ) {
                                 dockContent()
                             }
@@ -874,6 +890,29 @@ fun HomeScreen(
                             }
                         }
                     }
+
+                    // Live TV News Ticker Bar positioned strictly below the Favorites Dock without touching dock geometry
+                    if (settings.showNewsTicker) {
+                        Spacer(modifier = Modifier.height(if (isCompactHeight) 4.dp else 6.dp))
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            TvNewsTickerBar(
+                                articles = state.newsArticles,
+                                isLoading = state.isLoadingNews,
+                                errorMessage = state.newsError,
+                                settings = settings,
+                                strings = strings,
+                                accent = accent,
+                                isCompactHeight = isCompactHeight,
+                                onClick = { showNewsDialog = true },
+                                modifier = Modifier
+                                    .fillMaxWidth(dockWidthFraction)
+                                    .testTag("home_news_ticker_bar"),
+                            )
+                        }
+                    }
                 }
             }
 
@@ -885,6 +924,36 @@ fun HomeScreen(
                     accent = accent,
                     onToggleAiTool = onToggleAiTool,
                     onDismiss = { showAiToolsPicker = false },
+                )
+            }
+
+            if (showRadioDialog) {
+                RadioStationsDialog(
+                    state = state,
+                    strings = strings,
+                    accent = accent,
+                    onPlayStation = onPlayRadioStation,
+                    onTogglePlayStop = onToggleRadioPlayPause,
+                    onRefresh = onRefreshRadio,
+                    onSelectCountry = onSelectRadioCountry,
+                    onSearch = onSearchRadio,
+                    onToggleFavoriteStation = onToggleFavoriteRadioStation,
+                    onDismiss = { showRadioDialog = false },
+                )
+            }
+
+            if (showNewsDialog) {
+                NewsReaderDialog(
+                    state = state,
+                    strings = strings,
+                    accent = accent,
+                    onRefresh = onRefreshNews,
+                    onOpenArticleLink = onOpenNewsArticle,
+                    onOpenSettings = {
+                        showNewsDialog = false
+                        onNavigate(LauncherDestination.LAUNCHER_SETTINGS)
+                    },
+                    onDismiss = { showNewsDialog = false },
                 )
             }
 
@@ -961,7 +1030,6 @@ fun HomeScreen(
                     onLaunchApp = onLaunchApp,
                 )
             }
-        }
         }
     }
 }
@@ -1159,7 +1227,7 @@ private fun WeatherWidgetCard(
         cornerRadius = 18.dp,
         isLeftPrayerShape = false,
         modifier = modifier,
-        rimAccentColor = settings.rimAccentColor,
+        rimAccentColor = accent,
     ) { isFocused ->
         Column(
             modifier = Modifier
@@ -1387,7 +1455,7 @@ private fun PrayerWidgetCard(
         cornerRadius = 18.dp,
         isLeftPrayerShape = true,
         modifier = modifier,
-        rimAccentColor = settings.rimAccentColor,
+        rimAccentColor = accent,
     ) { isFocused ->
         Column(
             horizontalAlignment = Alignment.Start,
@@ -1530,7 +1598,7 @@ private fun CalendarWidgetCard(
         cornerRadius = 18.dp,
         isLeftPrayerShape = true,
         modifier = modifier,
-        rimAccentColor = settings.rimAccentColor,
+        rimAccentColor = accent,
     ) { isFocused ->
         Column(
             horizontalAlignment = Alignment.Start,
@@ -1673,6 +1741,8 @@ private fun HorizontalAiToolsBar(
     onAddClick: () -> Unit,
     onLaunchTool: (String) -> Unit,
     onLongPressTool: (String) -> Unit,
+    onRadioClick: () -> Unit,
+    onRadioPlayPauseClick: () -> Unit,
     onOpenNetworkSettings: () -> Unit,
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -1681,9 +1751,9 @@ private fun HorizontalAiToolsBar(
     val settings = state.settings
     val accent = settings.accentColor
     val visibleShortcuts = settings.aiToolShortcuts.take(4)
-    val barHeight = if (isCompact) 38.dp else 44.dp
-    val itemSize = if (isCompact) 30.dp else 36.dp
-    val iconGlyphSize = if (isCompact) 15.dp else 17.dp
+    val barHeight = if (isCompact) 54.dp else 56.dp
+    val itemSize = 48.dp
+    val iconGlyphSize = if (isCompact) 16.dp else 18.dp
     val glassAlpha = settings.glassOpacity.coerceIn(0f, 0.95f)
     val surfaceColor = Color(settings.themePreset.surfaceHex)
 
@@ -1694,11 +1764,15 @@ private fun HorizontalAiToolsBar(
         NetworkType.OFFLINE -> Icons.Rounded.WifiOff
     }
 
-    val rimAccent = settings.rimAccentColor
+    val isRadioPlaying = state.radioStatus == RadioPlaybackStatus.PLAYING
+    val isRadioBuffering = state.radioStatus == RadioPlaybackStatus.LOADING
+    val isRadioActive = isRadioPlaying || isRadioBuffering
+    val activeStationName = state.activeRadioStation?.name.orEmpty()
+
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(28.dp),
         color = surfaceColor.copy(alpha = glassAlpha),
-        border = BorderStroke(1.1.dp, rimAccent.copy(alpha = 0.58f)),
+        border = BorderStroke(1.1.dp, accent.copy(alpha = 0.58f)),
         shadowElevation = if (glassAlpha < 0.08f) 0.dp else 4.dp,
         modifier = modifier
             .height(barHeight)
@@ -1748,6 +1822,109 @@ private fun HorizontalAiToolsBar(
                         tint = if (isFocused) PureWhite else PureWhite.copy(alpha = 0.94f),
                         modifier = Modifier.size(iconGlyphSize),
                     )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .height(if (isCompact) 16.dp else 18.dp)
+                    .background(PureWhite.copy(alpha = 0.22f))
+            )
+
+            // Local Radio station picker / live equalizer pill inside top AI taskbar
+            val showExpandedRadioChip = isRadioActive && !isCompact && activeStationName.isNotBlank()
+            TvFocusableSurface(
+                onClick = onRadioClick,
+                accentColor = if (isRadioPlaying) EmeraldGlow else accent,
+                shape = if (showExpandedRadioChip) RoundedCornerShape(18.dp) else CircleShape,
+                baseColor = when {
+                    isRadioPlaying -> EmeraldGlow.copy(alpha = 0.24f)
+                    isRadioBuffering -> accent.copy(alpha = 0.30f)
+                    else -> surfaceColor.copy(alpha = (glassAlpha + 0.12f).coerceIn(0.22f, 0.92f))
+                },
+                focusedColor = accent.copy(alpha = 0.55f),
+                baseBorderColor = if (isRadioPlaying) EmeraldGlow.copy(alpha = 0.78f) else accent.copy(alpha = 0.52f),
+                modifier = if (showExpandedRadioChip) {
+                    Modifier
+                        .height(itemSize)
+                        .testTag("top_radio_button")
+                } else {
+                    Modifier
+                        .size(itemSize)
+                        .testTag("top_radio_button")
+                },
+            ) { isFocused ->
+                val radioTint = when {
+                    isFocused -> PureWhite
+                    isRadioPlaying -> EmeraldGlow
+                    isRadioBuffering -> accent
+                    else -> PureWhite
+                }
+                if (showExpandedRadioChip) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.GraphicEq,
+                            contentDescription = strings.radioTitle,
+                            tint = radioTint,
+                            modifier = Modifier.size(iconGlyphSize),
+                        )
+                        Text(
+                            text = activeStationName,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.5.sp,
+                            ),
+                            color = PureWhite,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.widthIn(max = 96.dp),
+                        )
+                    }
+                } else {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = if (isRadioActive) Icons.Rounded.GraphicEq else Icons.Rounded.Radio,
+                            contentDescription = strings.radioTitle,
+                            tint = radioTint,
+                            modifier = Modifier.size(iconGlyphSize),
+                        )
+                    }
+                }
+            }
+
+            if (isRadioActive || state.activeRadioStation != null) {
+                TvFocusableSurface(
+                    onClick = onRadioPlayPauseClick,
+                    accentColor = if (isRadioActive) Color(0xFFEF4444) else EmeraldGlow,
+                    shape = CircleShape,
+                    baseColor = if (isRadioActive) {
+                        Color(0xFFEF4444).copy(alpha = 0.28f)
+                    } else {
+                        EmeraldGlow.copy(alpha = 0.20f)
+                    },
+                    focusedColor = if (isRadioActive) Color(0xFFDC2626) else EmeraldGlow.copy(alpha = 0.65f),
+                    baseBorderColor = if (isRadioActive) {
+                        Color(0xFFFCA5A5).copy(alpha = 0.72f)
+                    } else {
+                        EmeraldGlow.copy(alpha = 0.55f)
+                    },
+                    modifier = Modifier
+                        .size(itemSize)
+                        .testTag("top_radio_play_toggle"),
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = if (isRadioActive) Icons.Rounded.Stop else Icons.Rounded.PlayArrow,
+                            contentDescription = if (isRadioActive) strings.radioStopAction else strings.radioPlayAction,
+                            tint = PureWhite,
+                            modifier = Modifier.size(iconGlyphSize),
+                        )
+                    }
                 }
             }
 
@@ -1950,7 +2127,7 @@ private fun AiBarShortcutButton(
                     bitmap = iconBitmap,
                     contentDescription = matchingApp?.label ?: preset?.label ?: storageKey,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(sizeDp - 12.dp).clip(CircleShape),
+                    modifier = Modifier.size((sizeDp - 22.dp).coerceAtLeast(18.dp)).clip(CircleShape),
                 )
                 preset != null -> Text(
                     text = preset.shortBadge,

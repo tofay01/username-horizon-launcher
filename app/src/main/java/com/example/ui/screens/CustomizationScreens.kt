@@ -89,14 +89,10 @@ import com.example.model.LauncherStrings
 import com.example.model.ThemeCategory
 import com.example.model.ThemePreset
 import com.example.ui.LauncherUiState
-import com.example.ui.components.EarthTintedWallpaperImage
 import com.example.ui.components.GlassSegmentedSelector
 import com.example.ui.components.GlassSettingCardRow
 import com.example.ui.components.GlassToggleRow
-import com.example.ui.components.ProceduralThemeWallpaper
-import com.example.ui.components.ThemePreviewAccentFrame
 import com.example.ui.components.TvFocusableSurface
-import com.example.ui.components.hasBuiltInArtworkWallpaper
 import com.example.ui.components.wallpaperDrawableRes
 import com.example.ui.theme.DeepSpaceBlack
 import com.example.ui.theme.EmeraldGlow
@@ -302,17 +298,11 @@ fun ThemeAndWallpaperScreen(
                 Text(strings.themeAndWallpaperTitle, style = MaterialTheme.typography.headlineLarge, color = PureWhite)
             }
 
-            // 1. Categorized Theme Presets (Classic + Signature Skins + Sports + Country Flags + Cinema + Anime)
+            // 1. Categorized Theme Presets (Classic + Sports Clubs)
             val themeGroups = remember(strings) {
                 listOf(
                     strings.themeCategoryClassic to ThemePreset.entries.filter { it.category == ThemeCategory.CLASSIC },
-                    strings.themeCategorySignature to ThemePreset.entries.filter { it.category == ThemeCategory.SIGNATURE_SKINS },
                     strings.themeCategoryClubs to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_CLUBS },
-                    strings.themeCategoryNational to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_NATIONAL },
-                    strings.themeCategoryArab to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_ARAB },
-                    strings.themeCategoryFlags to ThemePreset.entries.filter { it.category == ThemeCategory.COUNTRY_FLAGS },
-                    strings.themeCategoryCinema to ThemePreset.entries.filter { it.category == ThemeCategory.CINEMA },
-                    strings.themeCategoryAnime to ThemePreset.entries.filter { it.category == ThemeCategory.ANIME },
                 )
             }
             themeGroups.forEach { (categoryTitle, presets) ->
@@ -336,7 +326,7 @@ fun ThemeAndWallpaperScreen(
                         val previewRes = wallpaperDrawableRes(preset.defaultWallpaperId)
                         TvFocusableSurface(
                             onClick = { onApplyThemePreset(preset) },
-                            accentColor = Color(preset.rimHex),
+                            accentColor = Color(preset.accentHex),
                             shape = RoundedCornerShape(16.dp),
                             baseColor = Color(preset.surfaceHex).copy(alpha = 0.72f),
                             focusedColor = Color(preset.accentHex).copy(alpha = 0.36f),
@@ -349,15 +339,10 @@ fun ThemeAndWallpaperScreen(
                         ) {
                             Box(modifier = Modifier.fillMaxSize()) {
                                 if (previewRes != null) {
-                                    EarthTintedWallpaperImage(
-                                        wallpaperId = preset.defaultWallpaperId,
-                                        resId = previewRes,
+                                    Image(
+                                        painter = painterResource(id = previewRes),
                                         contentDescription = label,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                } else if (hasBuiltInArtworkWallpaper(preset.defaultWallpaperId)) {
-                                    ProceduralThemeWallpaper(
-                                        wallpaperId = preset.defaultWallpaperId,
+                                        contentScale = ContentScale.Crop,
                                         modifier = Modifier.fillMaxSize(),
                                     )
                                 } else {
@@ -371,11 +356,6 @@ fun ThemeAndWallpaperScreen(
                                             )
                                     )
                                 }
-                                ThemePreviewAccentFrame(
-                                    skinStyle = preset.skinStyle,
-                                    rimColor = Color(preset.rimHex),
-                                    modifier = Modifier.fillMaxSize(),
-                                )
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -1044,11 +1024,6 @@ private fun BuiltInWallpaperCard(
                     painter = painterResource(id = wp.drawableRes),
                     contentDescription = wp.title,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else if (hasBuiltInArtworkWallpaper(wp.id)) {
-                ProceduralThemeWallpaper(
-                    wallpaperId = wp.id,
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {

@@ -22,6 +22,8 @@ import com.example.model.GestureAction
 import com.example.model.GestureType
 import com.example.model.LauncherLanguage
 import com.example.model.LauncherSettings
+import com.example.model.NewsCategory
+import com.example.model.NewsTickerFontType
 import com.example.model.PrayerKey
 import com.example.model.ThemePreset
 import kotlinx.coroutines.flow.Flow
@@ -88,6 +90,18 @@ class LauncherPreferencesRepository(private val context: Context) {
         val HIDDEN_PACKAGES = stringPreferencesKey("hidden_packages")
         val GESTURE_MAP = stringPreferencesKey("gesture_map")
         val MIGRATED_SEVEN_PER_ROW = booleanPreferencesKey("migrated_7_per_row")
+        val SELECTED_RADIO_ID = stringPreferencesKey("selected_radio_id")
+        val SELECTED_RADIO_NAME = stringPreferencesKey("selected_radio_name")
+        val SELECTED_RADIO_URL = stringPreferencesKey("selected_radio_url")
+        val SELECTED_RADIO_COUNTRY = stringPreferencesKey("selected_radio_country")
+        val FAVORITE_RADIO_IDS = stringPreferencesKey("favorite_radio_ids")
+        val SHOW_NEWS_TICKER = booleanPreferencesKey("show_news_ticker")
+        val ENABLED_NEWS_CATEGORIES = stringPreferencesKey("enabled_news_categories")
+        val NEWS_TICKER_FONT_TYPE = stringPreferencesKey("news_ticker_font_type")
+        val NEWS_TICKER_FONT_SIZE_SP = intPreferencesKey("news_ticker_font_size_sp")
+        val NEWS_TICKER_TEXT_COLOR_HEX = longPreferencesKey("news_ticker_text_color_hex")
+        val NEWS_TICKER_BG_COLOR_HEX = longPreferencesKey("news_ticker_bg_color_hex")
+        val NEWS_TICKER_BG_ALPHA = floatPreferencesKey("news_ticker_bg_alpha")
     }
 
     val settingsFlow: Flow<LauncherSettings> = context.launcherDataStore.data
@@ -150,6 +164,18 @@ class LauncherPreferencesRepository(private val context: Context) {
             prefs[Keys.CUSTOM_APP_ORDER] = updated.customAppOrder.joinToString("|")
             prefs[Keys.HIDDEN_PACKAGES] = updated.hiddenPackages.joinToString("|")
             prefs[Keys.GESTURE_MAP] = updated.gestureShortcuts.entries.joinToString(";") { "${it.key.key}=${it.value.key}" }
+            prefs[Keys.SELECTED_RADIO_ID] = updated.selectedRadioStationId
+            prefs[Keys.SELECTED_RADIO_NAME] = updated.selectedRadioStationName
+            prefs[Keys.SELECTED_RADIO_URL] = updated.selectedRadioStreamUrl
+            prefs[Keys.SELECTED_RADIO_COUNTRY] = updated.selectedRadioCountryCode
+            prefs[Keys.FAVORITE_RADIO_IDS] = updated.favoriteRadioStationIds.joinToString("|")
+            prefs[Keys.SHOW_NEWS_TICKER] = updated.showNewsTicker
+            prefs[Keys.ENABLED_NEWS_CATEGORIES] = updated.enabledNewsCategories.joinToString(",") { it.id }
+            prefs[Keys.NEWS_TICKER_FONT_TYPE] = updated.newsTickerFontType.id
+            prefs[Keys.NEWS_TICKER_FONT_SIZE_SP] = updated.newsTickerFontSizeSp.coerceIn(11, 20)
+            prefs[Keys.NEWS_TICKER_TEXT_COLOR_HEX] = updated.newsTickerTextColorHex
+            prefs[Keys.NEWS_TICKER_BG_COLOR_HEX] = updated.newsTickerBgColorHex
+            prefs[Keys.NEWS_TICKER_BG_ALPHA] = updated.newsTickerBgAlpha.coerceIn(0.20f, 1.0f)
         }
     }
 
@@ -216,6 +242,19 @@ class LauncherPreferencesRepository(private val context: Context) {
             else -> rawAppsPerRow.coerceIn(4, 7)
         }
 
+        val favoriteRadios = prefs[Keys.FAVORITE_RADIO_IDS]?.let { raw ->
+            if (raw.isBlank()) emptySet() else raw.split("|").filter { it.isNotBlank() }.toSet()
+        } ?: emptySet()
+
+        val enabledNewsCategories = prefs[Keys.ENABLED_NEWS_CATEGORIES]?.let { raw ->
+            if (raw.isBlank()) emptySet()
+            else raw.split(",").mapNotNull { id -> NewsCategory.entries.firstOrNull { it.id == id } }.toSet()
+        } ?: defaultSettings.enabledNewsCategories
+
+        val newsTickerFontType = prefs[Keys.NEWS_TICKER_FONT_TYPE]?.let { id ->
+            NewsTickerFontType.entries.firstOrNull { it.id == id }
+        } ?: defaultSettings.newsTickerFontType
+
         return LauncherSettings(
             language = language,
             appsPerRow = resolvedAppsPerRow,
@@ -268,6 +307,18 @@ class LauncherPreferencesRepository(private val context: Context) {
             customAppOrder = appOrder,
             hiddenPackages = hidden,
             gestureShortcuts = gestures,
+            selectedRadioStationId = prefs[Keys.SELECTED_RADIO_ID] ?: defaultSettings.selectedRadioStationId,
+            selectedRadioStationName = prefs[Keys.SELECTED_RADIO_NAME] ?: defaultSettings.selectedRadioStationName,
+            selectedRadioStreamUrl = prefs[Keys.SELECTED_RADIO_URL] ?: defaultSettings.selectedRadioStreamUrl,
+            selectedRadioCountryCode = prefs[Keys.SELECTED_RADIO_COUNTRY] ?: defaultSettings.selectedRadioCountryCode,
+            favoriteRadioStationIds = favoriteRadios,
+            showNewsTicker = prefs[Keys.SHOW_NEWS_TICKER] ?: defaultSettings.showNewsTicker,
+            enabledNewsCategories = enabledNewsCategories,
+            newsTickerFontType = newsTickerFontType,
+            newsTickerFontSizeSp = (prefs[Keys.NEWS_TICKER_FONT_SIZE_SP] ?: defaultSettings.newsTickerFontSizeSp).coerceIn(11, 20),
+            newsTickerTextColorHex = prefs[Keys.NEWS_TICKER_TEXT_COLOR_HEX] ?: defaultSettings.newsTickerTextColorHex,
+            newsTickerBgColorHex = prefs[Keys.NEWS_TICKER_BG_COLOR_HEX] ?: defaultSettings.newsTickerBgColorHex,
+            newsTickerBgAlpha = (prefs[Keys.NEWS_TICKER_BG_ALPHA] ?: defaultSettings.newsTickerBgAlpha).coerceIn(0.20f, 1.0f),
         )
     }
 }

@@ -17,26 +17,7 @@ enum class LauncherLanguage(val code: String, val displayName: String, val circl
 
 enum class ThemeCategory {
     CLASSIC,
-    SIGNATURE_SKINS,
     SPORTS_CLUBS,
-    SPORTS_NATIONAL,
-    SPORTS_ARAB,
-    COUNTRY_FLAGS,
-    CINEMA,
-    ANIME,
-}
-
-enum class ThemeSkinStyle {
-    DEFAULT,
-    SILVER_CHROME,
-    COFFEE_GOLD,
-    ZELLIGE_ALGERIAN,
-    PHARAOH_GOLD,
-    EGYPT_PHARAOHS,
-    ALGERIA_FENNECS,
-    MAN_CITY_ETIHAD,
-    BARCA_BLAUGRANA,
-    REAL_MADRID_ROYAL,
 }
 
 enum class ThemePreset(
@@ -48,11 +29,6 @@ enum class ThemePreset(
     val surfaceHex: Long,
     val defaultWallpaperId: String,
     val category: ThemeCategory = ThemeCategory.CLASSIC,
-    val secondaryHex: Long = accentHex,
-    val tertiaryHex: Long = 0xFFFFFFFF,
-    val badgeCode: String = "HRZ",
-    val rimHex: Long = accentHex,
-    val skinStyle: ThemeSkinStyle = ThemeSkinStyle.DEFAULT,
 ) {
     COSMOS_BLUE(
         id = "cosmos_blue",
@@ -62,7 +38,6 @@ enum class ThemePreset(
         accentHex = 0xFF38BDF8,
         surfaceHex = 0xFF0E2960,
         defaultWallpaperId = "earth",
-        badgeCode = "CSM",
     ),
     AURORA_EMERALD(
         id = "aurora_emerald",
@@ -72,7 +47,6 @@ enum class ThemePreset(
         accentHex = 0xFF34D399,
         surfaceHex = 0xFF0A2E2B,
         defaultWallpaperId = "aurora",
-        badgeCode = "AUR",
     ),
     AMBER_TWILIGHT(
         id = "amber_twilight",
@@ -82,7 +56,6 @@ enum class ThemePreset(
         accentHex = 0xFFFBBF24,
         surfaceHex = 0xFF281B18,
         defaultWallpaperId = "amber_night",
-        badgeCode = "AMB",
     ),
     COBALT_CRYSTAL(
         id = "cobalt_crystal",
@@ -92,7 +65,6 @@ enum class ThemePreset(
         accentHex = 0xFF22D3EE,
         surfaceHex = 0xFF0A1D42,
         defaultWallpaperId = "cobalt_waves",
-        badgeCode = "CBL",
     ),
     OLED_MINIMAL(
         id = "oled_minimal",
@@ -102,69 +74,6 @@ enum class ThemePreset(
         accentHex = 0xFFE2E8F0,
         surfaceHex = 0xFF0F172A,
         defaultWallpaperId = "gradient_dark",
-        badgeCode = "OLD",
-    ),
-
-    // واجهات ومظاهر Horizon الخاصة / Interfaces Signature Horizon
-    SILVER_EARTH(
-        id = "silver_earth",
-        labelFr = "Futuriste Argenté",
-        labelAr = "فضي مستقبلي",
-        labelEn = "Silver Chrome Earth",
-        accentHex = 0xFFE2E8F0,
-        surfaceHex = 0xFF141B26,
-        defaultWallpaperId = "earth_silver",
-        category = ThemeCategory.SIGNATURE_SKINS,
-        secondaryHex = 0xFFCBD5E1,
-        tertiaryHex = 0xFFFFFFFF,
-        badgeCode = "SLV",
-        rimHex = 0xFFF1F5F9,
-        skinStyle = ThemeSkinStyle.SILVER_CHROME,
-    ),
-    COFFEE_GOLD(
-        id = "coffee_gold",
-        labelFr = "Élégant Café & Or",
-        labelAr = "قهوة وذهب فاخر",
-        labelEn = "Espresso & Gold",
-        accentHex = 0xFFFBBF24,
-        surfaceHex = 0xFF24140B,
-        defaultWallpaperId = "earth_gold",
-        category = ThemeCategory.SIGNATURE_SKINS,
-        secondaryHex = 0xFFF59E0B,
-        tertiaryHex = 0xFFFEF3C7,
-        badgeCode = "GLD",
-        rimHex = 0xFFF59E0B,
-        skinStyle = ThemeSkinStyle.COFFEE_GOLD,
-    ),
-    ZELLIGE_ROYAL(
-        id = "zellige_royal",
-        labelFr = "Zellige Algérien",
-        labelAr = "زليج جزائري فاخر",
-        labelEn = "Algerian Zellige",
-        accentHex = 0xFFFBBF24,
-        surfaceHex = 0xFF0A2422,
-        defaultWallpaperId = "earth_zellige",
-        category = ThemeCategory.SIGNATURE_SKINS,
-        secondaryHex = 0xFF10B981,
-        tertiaryHex = 0xFF06B6D4,
-        badgeCode = "ZLG",
-        rimHex = 0xFFFACC15,
-        skinStyle = ThemeSkinStyle.ZELLIGE_ALGERIAN,
-    ),
-    PHARAOH_GOLD(
-        id = "pharaoh_gold",
-        labelFr = "Égypte Dorée",
-        labelAr = "مصر الفرعونية الذهبية",
-        labelEn = "Golden Pharaoh",
-        accentHex = 0xFFFACC15,
-        surfaceHex = 0xFF23180A,
-        defaultWallpaperId = "earth_pharaoh",
-        category = ThemeCategory.SIGNATURE_SKINS,
-        secondaryHex = 0xFFD97706,
-        tertiaryHex = 0xFFFEF08A,
-        badgeCode = "PHR",
-        rimHex = 0xFFFACC15,
-        skinStyle = ThemeSkinStyle.PHARAOH_GOLD,
     ),
 
     // أشهر الأندية العالمية / Clubs célèbres
@@ -177,11 +86,6 @@ enum class ThemePreset(
         surfaceHex = 0xFF0F1B3D,
         defaultWallpaperId = "sport_real_madrid",
         category = ThemeCategory.SPORTS_CLUBS,
-        secondaryHex = 0xFFF8FAFC,
-        tertiaryHex = 0xFF2563EB,
-        badgeCode = "RMA",
-        rimHex = 0xFFFACC15,
-        skinStyle = ThemeSkinStyle.REAL_MADRID_ROYAL,
     ),
     BARCELONA(
         id = "barcelona",
@@ -192,11 +96,6 @@ enum class ThemePreset(
         surfaceHex = 0xFF0A1D56,
         defaultWallpaperId = "sport_barcelona",
         category = ThemeCategory.SPORTS_CLUBS,
-        secondaryHex = 0xFFA50044,
-        tertiaryHex = 0xFFFACC15,
-        badgeCode = "FCB",
-        rimHex = 0xFFFACC15,
-        skinStyle = ThemeSkinStyle.BARCA_BLAUGRANA,
     ),
     MAN_CITY(
         id = "man_city",
@@ -207,11 +106,6 @@ enum class ThemePreset(
         surfaceHex = 0xFF0A1E3D,
         defaultWallpaperId = "sport_man_city",
         category = ThemeCategory.SPORTS_CLUBS,
-        secondaryHex = 0xFF38BDF8,
-        tertiaryHex = 0xFFFACC15,
-        badgeCode = "MCI",
-        rimHex = 0xFF93C5FD,
-        skinStyle = ThemeSkinStyle.MAN_CITY_ETIHAD,
     ),
     PSG(
         id = "psg",
@@ -222,316 +116,11 @@ enum class ThemePreset(
         surfaceHex = 0xFF081636,
         defaultWallpaperId = "sport_psg",
         category = ThemeCategory.SPORTS_CLUBS,
-        secondaryHex = 0xFFDA291C,
-        tertiaryHex = 0xFFF8FAFC,
-        badgeCode = "PSG",
-    ),
-
-    // منتخبات عالمية / Équipes nationales
-    BRAZIL(
-        id = "brazil",
-        labelFr = "Brésil",
-        labelAr = "البرازيل",
-        labelEn = "Brazil",
-        accentHex = 0xFFFACC15,
-        surfaceHex = 0xFF062B17,
-        defaultWallpaperId = "sport_brazil",
-        category = ThemeCategory.SPORTS_NATIONAL,
-        secondaryHex = 0xFF009C3B,
-        tertiaryHex = 0xFF1D4ED8,
-        badgeCode = "BRA",
-    ),
-    ARGENTINA(
-        id = "argentina",
-        labelFr = "Argentine",
-        labelAr = "الأرجنتين",
-        labelEn = "Argentina",
-        accentHex = 0xFF5BC0F8,
-        surfaceHex = 0xFF091F3E,
-        defaultWallpaperId = "sport_argentina",
-        category = ThemeCategory.SPORTS_NATIONAL,
-        secondaryHex = 0xFFF8FAFC,
-        tertiaryHex = 0xFFFACC15,
-        badgeCode = "ARG",
-    ),
-    FRANCE(
-        id = "france",
-        labelFr = "France",
-        labelAr = "فرنسا",
-        labelEn = "France",
-        accentHex = 0xFF3B82F6,
-        surfaceHex = 0xFF091945,
-        defaultWallpaperId = "sport_france",
-        category = ThemeCategory.SPORTS_NATIONAL,
-        secondaryHex = 0xFFF8FAFC,
-        tertiaryHex = 0xFFEF4135,
-        badgeCode = "FRA",
-    ),
-    SPAIN(
-        id = "spain",
-        labelFr = "Espagne",
-        labelAr = "إسبانيا",
-        labelEn = "Spain",
-        accentHex = 0xFFFBBF24,
-        surfaceHex = 0xFF3B0912,
-        defaultWallpaperId = "sport_spain",
-        category = ThemeCategory.SPORTS_NATIONAL,
-        secondaryHex = 0xFFAA151B,
-        tertiaryHex = 0xFFFACC15,
-        badgeCode = "ESP",
-    ),
-
-    // المنتخبات العربية / Équipes arabes
-    EGYPT(
-        id = "egypt",
-        labelFr = "Égypte",
-        labelAr = "مصر",
-        labelEn = "Egypt",
-        accentHex = 0xFFFBBF24,
-        surfaceHex = 0xFF32080E,
-        defaultWallpaperId = "sport_egypt",
-        category = ThemeCategory.SPORTS_ARAB,
-        secondaryHex = 0xFFCE1126,
-        tertiaryHex = 0xFFF8FAFC,
-        badgeCode = "EGY",
-        rimHex = 0xFFFACC15,
-        skinStyle = ThemeSkinStyle.EGYPT_PHARAOHS,
-    ),
-    ALGERIA(
-        id = "algeria",
-        labelFr = "Algérie",
-        labelAr = "الجزائر",
-        labelEn = "Algeria",
-        accentHex = 0xFF10B981,
-        surfaceHex = 0xFF04291A,
-        defaultWallpaperId = "sport_algeria",
-        category = ThemeCategory.SPORTS_ARAB,
-        secondaryHex = 0xFFF8FAFC,
-        tertiaryHex = 0xFFD21034,
-        badgeCode = "DZA",
-        rimHex = 0xFFFACC15,
-        skinStyle = ThemeSkinStyle.ALGERIA_FENNECS,
-    ),
-    SAUDI_ARABIA(
-        id = "saudi_arabia",
-        labelFr = "Arabie Saoudite",
-        labelAr = "المملكة العربية السعودية",
-        labelEn = "Saudi Arabia",
-        accentHex = 0xFF22C55E,
-        surfaceHex = 0xFF042818,
-        defaultWallpaperId = "sport_saudi_arabia",
-        category = ThemeCategory.SPORTS_ARAB,
-        secondaryHex = 0xFF006C35,
-        tertiaryHex = 0xFFF8FAFC,
-        badgeCode = "KSA",
-    ),
-    TUNISIA(
-        id = "tunisia",
-        labelFr = "Tunisie",
-        labelAr = "تونس",
-        labelEn = "Tunisia",
-        accentHex = 0xFFEF4444,
-        surfaceHex = 0xFF38070E,
-        defaultWallpaperId = "sport_tunisia",
-        category = ThemeCategory.SPORTS_ARAB,
-        secondaryHex = 0xFFE70013,
-        tertiaryHex = 0xFFF8FAFC,
-        badgeCode = "TUN",
-    ),
-
-    // أعلام الدول / Drapeaux nationaux / Country Flags
-    FLAG_ALGERIA(
-        id = "flag_algeria",
-        labelFr = "Drapeau · Algérie",
-        labelAr = "علم الجزائر",
-        labelEn = "Flag · Algeria",
-        accentHex = 0xFF10B981,
-        surfaceHex = 0xFF04291A,
-        defaultWallpaperId = "flag_algeria",
-        category = ThemeCategory.COUNTRY_FLAGS,
-        secondaryHex = 0xFFF8FAFC,
-        tertiaryHex = 0xFFD21034,
-        badgeCode = "DZA",
-    ),
-    FLAG_EGYPT(
-        id = "flag_egypt",
-        labelFr = "Drapeau · Égypte",
-        labelAr = "علم مصر",
-        labelEn = "Flag · Egypt",
-        accentHex = 0xFFFBBF24,
-        surfaceHex = 0xFF2D0A10,
-        defaultWallpaperId = "flag_egypt",
-        category = ThemeCategory.COUNTRY_FLAGS,
-        secondaryHex = 0xFFCE1126,
-        tertiaryHex = 0xFFF8FAFC,
-        badgeCode = "EGY",
-    ),
-    FLAG_SAUDI_ARABIA(
-        id = "flag_saudi_arabia",
-        labelFr = "Drapeau · Arabie Saoudite",
-        labelAr = "علم السعودية",
-        labelEn = "Flag · Saudi Arabia",
-        accentHex = 0xFF22C55E,
-        surfaceHex = 0xFF032816,
-        defaultWallpaperId = "flag_saudi_arabia",
-        category = ThemeCategory.COUNTRY_FLAGS,
-        secondaryHex = 0xFF006C35,
-        tertiaryHex = 0xFFF8FAFC,
-        badgeCode = "KSA",
-    ),
-    FLAG_FRANCE(
-        id = "flag_france",
-        labelFr = "Drapeau · France",
-        labelAr = "علم فرنسا",
-        labelEn = "Flag · France",
-        accentHex = 0xFF3B82F6,
-        surfaceHex = 0xFF0A1A4A,
-        defaultWallpaperId = "flag_france",
-        category = ThemeCategory.COUNTRY_FLAGS,
-        secondaryHex = 0xFFF8FAFC,
-        tertiaryHex = 0xFFEF4135,
-        badgeCode = "FRA",
-    ),
-    FLAG_GERMANY(
-        id = "flag_germany",
-        labelFr = "Drapeau · Allemagne",
-        labelAr = "علم ألمانيا",
-        labelEn = "Flag · Germany",
-        accentHex = 0xFFFACC15,
-        surfaceHex = 0xFF291408,
-        defaultWallpaperId = "flag_germany",
-        category = ThemeCategory.COUNTRY_FLAGS,
-        secondaryHex = 0xFFDD0000,
-        tertiaryHex = 0xFF0F172A,
-        badgeCode = "DEU",
-    ),
-    FLAG_SPAIN(
-        id = "flag_spain",
-        labelFr = "Drapeau · Espagne",
-        labelAr = "علم إسبانيا",
-        labelEn = "Flag · Spain",
-        accentHex = 0xFFFBBF24,
-        surfaceHex = 0xFF3A0A11,
-        defaultWallpaperId = "flag_spain",
-        category = ThemeCategory.COUNTRY_FLAGS,
-        secondaryHex = 0xFFAA151B,
-        tertiaryHex = 0xFFF1BF00,
-        badgeCode = "ESP",
-    ),
-    FLAG_UK(
-        id = "flag_uk",
-        labelFr = "Drapeau · Royaume-Uni",
-        labelAr = "علم بريطانيا",
-        labelEn = "Flag · United Kingdom",
-        accentHex = 0xFFEF4444,
-        surfaceHex = 0xFF091B47,
-        defaultWallpaperId = "flag_uk",
-        category = ThemeCategory.COUNTRY_FLAGS,
-        secondaryHex = 0xFFF8FAFC,
-        tertiaryHex = 0xFF012169,
-        badgeCode = "GBR",
-    ),
-
-    // السينما / Cinéma / Cinema
-    CINEMA_CLASSIC(
-        id = "cinema_classic",
-        labelFr = "Cinéma Classique",
-        labelAr = "السينما الكلاسيكية",
-        labelEn = "Classic Cinema",
-        accentHex = 0xFFFBBF24,
-        surfaceHex = 0xFF260910,
-        defaultWallpaperId = "cinema_classic",
-        category = ThemeCategory.CINEMA,
-        secondaryHex = 0xFFDC2626,
-        tertiaryHex = 0xFFFDE68A,
-        badgeCode = "CINE",
-    ),
-    CINEMA_SCIFI(
-        id = "cinema_scifi",
-        labelFr = "Cinéma Sci-Fi Néon",
-        labelAr = "سينما الخيال العلمي",
-        labelEn = "Sci-Fi Neon Cinema",
-        accentHex = 0xFF22D3EE,
-        surfaceHex = 0xFF091432,
-        defaultWallpaperId = "cinema_scifi",
-        category = ThemeCategory.CINEMA,
-        secondaryHex = 0xFFA855F7,
-        tertiaryHex = 0xFFF8FAFC,
-        badgeCode = "SCFI",
-    ),
-    CINEMA_RETRO(
-        id = "cinema_retro",
-        labelFr = "Cinéma Rétro 35mm",
-        labelAr = "سينما ريترو الكلاسيكية",
-        labelEn = "Vintage Reel Cinema",
-        accentHex = 0xFFF59E0B,
-        surfaceHex = 0xFF23160D,
-        defaultWallpaperId = "cinema_retro",
-        category = ThemeCategory.CINEMA,
-        secondaryHex = 0xFFEA580C,
-        tertiaryHex = 0xFFFDE68A,
-        badgeCode = "REEL",
-    ),
-
-    // الرسوم المتحركة الشهيرة / Dessins animés cultes / Classic Anime
-    ANIME_GRENDIZER(
-        id = "anime_grendizer",
-        labelFr = "Goldorak · Grendizer",
-        labelAr = "غرندايزر",
-        labelEn = "Grendizer",
-        accentHex = 0xFFEF4444,
-        surfaceHex = 0xFF14183D,
-        defaultWallpaperId = "anime_grendizer",
-        category = ThemeCategory.ANIME,
-        secondaryHex = 0xFFFACC15,
-        tertiaryHex = 0xFF38BDF8,
-        badgeCode = "GRD",
-    ),
-    ANIME_REMI(
-        id = "anime_remi",
-        labelFr = "Rémi Sans Famille",
-        labelAr = "ريمي",
-        labelEn = "Remi",
-        accentHex = 0xFFFBBF24,
-        surfaceHex = 0xFF142A24,
-        defaultWallpaperId = "anime_remi",
-        category = ThemeCategory.ANIME,
-        secondaryHex = 0xFF34D399,
-        tertiaryHex = 0xFF38BDF8,
-        badgeCode = "REM",
-    ),
-    ANIME_SANDYBELL(
-        id = "anime_sandybell",
-        labelFr = "Sandy Jonquille · Sandybell",
-        labelAr = "ساندي بل",
-        labelEn = "Sandybell",
-        accentHex = 0xFFF472B6,
-        surfaceHex = 0xFF2A142D,
-        defaultWallpaperId = "anime_sandybell",
-        category = ThemeCategory.ANIME,
-        secondaryHex = 0xFFFACC15,
-        tertiaryHex = 0xFF34D399,
-        badgeCode = "SND",
-    ),
-    ANIME_DBZ(
-        id = "anime_dbz",
-        labelFr = "Dragon Ball Z",
-        labelAr = "دراغون بول زد",
-        labelEn = "Dragon Ball Z",
-        accentHex = 0xFFF97316,
-        surfaceHex = 0xFF1A1E44,
-        defaultWallpaperId = "anime_dbz",
-        category = ThemeCategory.ANIME,
-        secondaryHex = 0xFFFACC15,
-        tertiaryHex = 0xFF3B82F6,
-        badgeCode = "DBZ",
     ),
     ;
 
     val isSportsTheme: Boolean
-        get() = category == ThemeCategory.SPORTS_CLUBS ||
-            category == ThemeCategory.SPORTS_NATIONAL ||
-            category == ThemeCategory.SPORTS_ARAB
+        get() = category == ThemeCategory.SPORTS_CLUBS
 
     companion object {
         fun byWallpaperId(id: String): ThemePreset? =
@@ -690,6 +279,72 @@ enum class NetworkType {
     OFFLINE,
 }
 
+enum class RadioPlaybackStatus {
+    IDLE,
+    LOADING,
+    PLAYING,
+    ERROR,
+}
+
+data class RadioStation(
+    val stationUuid: String,
+    val name: String,
+    val streamUrl: String,
+    val country: String = "",
+    val countryCode: String = "",
+    val state: String = "",
+    val language: String = "",
+    val tags: String = "",
+    val codec: String = "",
+    val bitrate: Int = 0,
+    val favicon: String = "",
+    val votes: Int = 0,
+)
+
+enum class NewsCategory(val id: String) {
+    POLITICS("politics"),
+    SPORTS("sports"),
+    WORLD("world"),
+}
+
+enum class NewsTickerFontType(val id: String) {
+    DEFAULT("default"),
+    MODERN("modern"),
+    ARABIC("arabic"),
+    SERIF("serif"),
+    MONO("mono"),
+}
+
+data class NewsArticle(
+    val id: String,
+    val title: String,
+    val summary: String = "",
+    val link: String = "",
+    val sourceName: String = "",
+    val category: NewsCategory = NewsCategory.WORLD,
+    val publishedAt: String = "",
+)
+
+object NewsTickerDefaults {
+    val TEXT_COLOR_SWATCHES: List<Long> = listOf(
+        0xFFF8FAFC, // Pure White
+        0xFF38BDF8, // Sky Cyan
+        0xFFFACC15, // Broadcast Gold
+        0xFF34D399, // Sports Emerald
+        0xFFFB7185, // Coral Rose
+        0xFF0F172A, // Deep Charcoal (for bright backgrounds)
+    )
+
+    val BG_COLOR_SWATCHES: List<Long> = listOf(
+        0xFF0A1B3D, // Broadcast Navy
+        0xFF090D16, // Deep Studio Black
+        0xFF7F1D1D, // Breaking Crimson
+        0xFF064E3B, // Stadium Emerald
+        0xFF1E293B, // Glass Slate
+        0xFFF1F5F9, // Crisp Broadcast White
+    )
+}
+
 data class PrayerTimeEntry(
     val key: PrayerKey,
     val time24: String,
@@ -839,15 +494,20 @@ data class LauncherSettings(
         GestureType.DOUBLE_TAP to GestureAction.OPEN_SETTINGS,
         GestureType.LONG_PRESS to GestureAction.OPEN_THEME_CUSTOMIZER,
     ),
+    val selectedRadioStationId: String = "",
+    val selectedRadioStationName: String = "",
+    val selectedRadioStreamUrl: String = "",
+    val selectedRadioCountryCode: String = "",
+    val favoriteRadioStationIds: Set<String> = emptySet(),
+    val showNewsTicker: Boolean = true,
+    val enabledNewsCategories: Set<NewsCategory> = NewsCategory.entries.toSet(),
+    val newsTickerFontType: NewsTickerFontType = NewsTickerFontType.DEFAULT,
+    val newsTickerFontSizeSp: Int = 13,
+    val newsTickerTextColorHex: Long = 0xFFF8FAFC,
+    val newsTickerBgColorHex: Long = 0xFF0A1B3D,
+    val newsTickerBgAlpha: Float = 0.86f,
 ) {
     val accentColor: Color get() = Color(accentColorHex)
-
-    val rimAccentColor: Color
-        get() = if (accentColorHex == themePreset.accentHex) {
-            Color(themePreset.rimHex)
-        } else {
-            accentColor
-        }
 }
 
 enum class LauncherDestination {

@@ -66,6 +66,10 @@ import com.example.model.ClockTheme
 import com.example.model.LauncherDestination
 import com.example.model.LauncherSettings
 import com.example.model.LauncherStrings
+import com.example.model.NewsArticle
+import com.example.model.NewsCategory
+import com.example.model.NewsTickerDefaults
+import com.example.model.NewsTickerFontType
 import com.example.model.PrayerCalculationMethod
 import com.example.ui.LauncherUiState
 import com.example.ui.components.ClockModeFilter
@@ -76,9 +80,19 @@ import com.example.ui.components.GlassSegmentedSelector
 import com.example.ui.components.GlassSettingCardRow
 import com.example.ui.components.GlassToggleRow
 import com.example.ui.components.TvFocusableSurface
+import com.example.ui.components.TvNewsTickerBar
+import com.example.ui.components.newsCategoryBadgeBg
+import com.example.ui.components.newsCategoryLabel
 import com.example.ui.theme.EmeraldGlow
+import com.example.ui.theme.GlassBlue
 import com.example.ui.theme.MutedSlate
 import com.example.ui.theme.PureWhite
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Surface
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
 
 @Composable
 fun LauncherSettingsScreen(
@@ -522,6 +536,404 @@ fun LauncherSettingsScreen(
                 onCheckedChange = { checked -> onUpdateSettings { it.copy(showWeatherWidget = checked) } },
                 testTag = "settings_toggle_weather_widget",
             )
+
+            // TV News Ticker Bar customization
+            Text(
+                text = strings.newsSectionTitle,
+                style = MaterialTheme.typography.titleMedium,
+                color = accent,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+
+            GlassToggleRow(
+                title = strings.newsTickerShowToggle,
+                checked = settings.showNewsTicker,
+                accentColor = accent,
+                onCheckedChange = { checked -> onUpdateSettings { it.copy(showNewsTicker = checked) } },
+                testTag = "toggle_show_news_ticker",
+            )
+
+            // Live Ticker Preview
+            val previewArticles = remember(state.newsArticles, settings.language) {
+                if (state.newsArticles.isNotEmpty()) {
+                    state.newsArticles.take(3)
+                } else {
+                    listOf(
+                        NewsArticle(
+                            id = "preview_pol",
+                            title = "${strings.newsCategoryPolitics} · ${strings.newsTickerBadgeLabel}",
+                            sourceName = "Horizon",
+                            category = NewsCategory.POLITICS,
+                        ),
+                        NewsArticle(
+                            id = "preview_spt",
+                            title = "${strings.newsCategorySports} · ${strings.newsTickerBadgeLabel}",
+                            sourceName = "Horizon",
+                            category = NewsCategory.SPORTS,
+                        ),
+                        NewsArticle(
+                            id = "preview_wld",
+                            title = "${strings.newsCategoryWorld} · ${strings.newsTickerBadgeLabel}",
+                            sourceName = "Horizon",
+                            category = NewsCategory.WORLD,
+                        ),
+                    )
+                }
+            }
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = GlassBlue.copy(alpha = 0.42f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.16f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(14.dp),
+                ) {
+                    Text(
+                        text = strings.newsPreviewLabel,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MutedSlate,
+                    )
+                    TvNewsTickerBar(
+                        articles = previewArticles,
+                        isLoading = false,
+                        errorMessage = null,
+                        settings = settings,
+                        strings = strings,
+                        accent = accent,
+                        onClick = {},
+                        interactive = false,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("news_ticker_preview"),
+                    )
+                }
+            }
+
+            // Categories: Politics, Sports, World
+            Text(
+                text = strings.newsCategoriesTitle,
+                style = MaterialTheme.typography.titleMedium,
+                color = PureWhite,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                NewsCategory.entries.forEach { category ->
+                    val enabled = settings.enabledNewsCategories.contains(category)
+                    val catAccent = newsCategoryBadgeBg(category)
+                    TvFocusableSurface(
+                        onClick = {
+                            onUpdateSettings { s ->
+                                val next = s.enabledNewsCategories.toMutableSet()
+                                if (next.contains(category)) next.remove(category) else next.add(category)
+                                s.copy(enabledNewsCategories = next)
+                            }
+                        },
+                        accentColor = catAccent,
+                        shape = RoundedCornerShape(14.dp),
+                        baseColor = if (enabled) catAccent.copy(alpha = 0.28f) else GlassBlue.copy(alpha = 0.44f),
+                        focusedColor = catAccent.copy(alpha = 0.52f),
+                        isSelected = enabled,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                            .testTag("news_cat_toggle_${category.id}"),
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text(
+                                text = newsCategoryLabel(category, strings),
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = if (enabled) FontWeight.Bold else FontWeight.Medium,
+                                ),
+                                color = PureWhite,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Font Type selector
+            Text(
+                text = strings.newsFontTypeTitle,
+                style = MaterialTheme.typography.titleMedium,
+                color = PureWhite,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            GlassSegmentedSelector(
+                options = NewsTickerFontType.entries,
+                selected = settings.newsTickerFontType,
+                labelProvider = { fontType ->
+                    when (fontType) {
+                        NewsTickerFontType.DEFAULT -> strings.newsFontDefault
+                        NewsTickerFontType.MODERN -> strings.newsFontModern
+                        NewsTickerFontType.ARABIC -> strings.newsFontArabic
+                        NewsTickerFontType.SERIF -> strings.newsFontSerif
+                        NewsTickerFontType.MONO -> strings.newsFontMono
+                    }
+                },
+                accentColor = accent,
+                onSelect = { fontType -> onUpdateSettings { it.copy(newsTickerFontType = fontType) } },
+                testTagPrefix = "news_font_type",
+                tagSuffixProvider = { it.id },
+            )
+
+            // Font Size stepper (11..20 sp)
+            val currentFontSize = settings.newsTickerFontSizeSp.coerceIn(11, 20)
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = GlassBlue.copy(alpha = 0.50f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.20f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp, vertical = 14.dp),
+                ) {
+                    Text(
+                        text = "${strings.newsFontSizeTitle} ($currentFontSize sp)",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = PureWhite,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("news_font_size_value"),
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        TvFocusableSurface(
+                            onClick = {
+                                onUpdateSettings {
+                                    it.copy(newsTickerFontSizeSp = (it.newsTickerFontSizeSp - 1).coerceIn(11, 20))
+                                }
+                            },
+                            accentColor = accent,
+                            shape = CircleShape,
+                            baseColor = Color.White.copy(alpha = 0.14f),
+                            focusedColor = accent.copy(alpha = 0.55f),
+                            modifier = Modifier.size(48.dp).testTag("news_font_size_decrease"),
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Text(
+                                    text = "−",
+                                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = PureWhite,
+                                )
+                            }
+                        }
+                        TvFocusableSurface(
+                            onClick = {
+                                onUpdateSettings {
+                                    it.copy(newsTickerFontSizeSp = (it.newsTickerFontSizeSp + 1).coerceIn(11, 20))
+                                }
+                            },
+                            accentColor = accent,
+                            shape = CircleShape,
+                            baseColor = Color.White.copy(alpha = 0.14f),
+                            focusedColor = accent.copy(alpha = 0.55f),
+                            modifier = Modifier.size(48.dp).testTag("news_font_size_increase"),
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Text(
+                                    text = "+",
+                                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = PureWhite,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Font Color swatches
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = GlassBlue.copy(alpha = 0.50f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.20f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.padding(18.dp),
+                ) {
+                    Text(
+                        text = strings.newsFontColorTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = PureWhite,
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        NewsTickerDefaults.TEXT_COLOR_SWATCHES.forEach { hex ->
+                            val selected = settings.newsTickerTextColorHex == hex
+                            TvFocusableSurface(
+                                onClick = { onUpdateSettings { it.copy(newsTickerTextColorHex = hex) } },
+                                accentColor = accent,
+                                shape = CircleShape,
+                                baseColor = Color(hex),
+                                focusedColor = Color(hex),
+                                isSelected = selected,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .testTag("news_text_color_${java.lang.Long.toHexString(hex).uppercase()}"),
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .background(Color(hex)),
+                                ) {
+                                    if (selected) {
+                                        Text(
+                                            text = "✓",
+                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                            color = if (hex == 0xFFF8FAFC || hex == 0xFFFACC15) Color(0xFF0F172A) else PureWhite,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Background Color swatches
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = GlassBlue.copy(alpha = 0.50f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.20f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.padding(18.dp),
+                ) {
+                    Text(
+                        text = strings.newsBgColorTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = PureWhite,
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        NewsTickerDefaults.BG_COLOR_SWATCHES.forEach { hex ->
+                            val selected = settings.newsTickerBgColorHex == hex
+                            TvFocusableSurface(
+                                onClick = { onUpdateSettings { it.copy(newsTickerBgColorHex = hex) } },
+                                accentColor = accent,
+                                shape = CircleShape,
+                                baseColor = Color(hex),
+                                focusedColor = Color(hex),
+                                isSelected = selected,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .testTag("news_bg_color_${java.lang.Long.toHexString(hex).uppercase()}"),
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .background(Color(hex)),
+                                ) {
+                                    if (selected) {
+                                        Text(
+                                            text = "✓",
+                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                            color = if (hex == 0xFFF1F5F9) Color(0xFF0F172A) else PureWhite,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Background Opacity stepper (20%..100%)
+            val bgOpacityPct = (settings.newsTickerBgAlpha.coerceIn(0.20f, 1.0f) * 100f).roundToInt()
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = GlassBlue.copy(alpha = 0.50f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.20f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp, vertical = 14.dp),
+                ) {
+                    Text(
+                        text = "${strings.newsBgOpacityTitle} ($bgOpacityPct%)",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = PureWhite,
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("news_bg_opacity_value"),
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        TvFocusableSurface(
+                            onClick = {
+                                onUpdateSettings {
+                                    val next = ((it.newsTickerBgAlpha - 0.10f).coerceIn(0.20f, 1.0f) * 100f).roundToInt() / 100f
+                                    it.copy(newsTickerBgAlpha = next)
+                                }
+                            },
+                            accentColor = accent,
+                            shape = CircleShape,
+                            baseColor = Color.White.copy(alpha = 0.14f),
+                            focusedColor = accent.copy(alpha = 0.55f),
+                            modifier = Modifier.size(48.dp).testTag("news_bg_opacity_decrease"),
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Text(
+                                    text = "−",
+                                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = PureWhite,
+                                )
+                            }
+                        }
+                        TvFocusableSurface(
+                            onClick = {
+                                onUpdateSettings {
+                                    val next = ((it.newsTickerBgAlpha + 0.10f).coerceIn(0.20f, 1.0f) * 100f).roundToInt() / 100f
+                                    it.copy(newsTickerBgAlpha = next)
+                                }
+                            },
+                            accentColor = accent,
+                            shape = CircleShape,
+                            baseColor = Color.White.copy(alpha = 0.14f),
+                            focusedColor = accent.copy(alpha = 0.55f),
+                            modifier = Modifier.size(48.dp).testTag("news_bg_opacity_increase"),
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Text(
+                                    text = "+",
+                                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = PureWhite,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             // Animations & Advanced effects
             GlassSettingCardRow(

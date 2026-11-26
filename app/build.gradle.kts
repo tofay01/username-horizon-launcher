@@ -16,8 +16,8 @@ android {
     applicationId = "com.aistudio.horizonlauncher.qvxkpm"
     minSdk = 24
     targetSdk = 36
-    versionCode = 17
-    versionName = "1.16"
+    versionCode = 18
+    versionName = "1.17"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -103,6 +103,7 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.media3.exoplayer)
+  implementation(libs.androidx.media3.exoplayer.hls)
   // implementation(libs.androidx.navigation.compose)
   // implementation(libs.androidx.room.ktx)
   // implementation(libs.androidx.room.runtime)

@@ -2041,3 +2041,130 @@ val Icons.Rounded.WifiOff: ImageVector
             }
         }.build().also { _Rounded_WifiOff = it }
     }
+
+private var _Rounded_Radio: ImageVector? = null
+val Icons.Rounded.Radio: ImageVector
+    get() {
+        _Rounded_Radio?.let { return it }
+        return ImageVector.Builder(name = "Rounded.Radio", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f, autoMirror = false).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(3.24f, 6.15f)
+                curveTo(2.51f, 6.43f, 2.0f, 7.17f, 2.0f, 8.0f)
+                verticalLineToRelative(12.0f)
+                curveToRelative(0f, 1.1f, 0.89f, 2.0f, 2.0f, 2.0f)
+                horizontalLineToRelative(16.0f)
+                curveToRelative(1.11f, 0f, 2.0f, -0.9f, 2.0f, -2.0f)
+                verticalLineTo(8.0f)
+                curveToRelative(0f, -1.11f, -0.89f, -2.0f, -2.0f, -2.0f)
+                horizontalLineTo(8.3f)
+                lineToRelative(7.43f, -3.0f)
+                curveToRelative(0.46f, -0.19f, 0.68f, -0.71f, 0.49f, -1.17f)
+                curveToRelative(-0.19f, -0.46f, -0.71f, -0.68f, -1.17f, -0.49f)
+                lineTo(3.24f, 6.15f)
+                close()
+                moveTo(7.0f, 20.0f)
+                curveToRelative(-1.66f, 0f, -3.0f, -1.34f, -3.0f, -3.0f)
+                reflectiveCurveToRelative(1.34f, -3.0f, 3.0f, -3.0f)
+                reflectiveCurveToRelative(3.0f, 1.34f, 3.0f, 3.0f)
+                reflectiveCurveToRelative(-1.34f, 3.0f, -3.0f, 3.0f)
+                close()
+                moveTo(20.0f, 12.0f)
+                horizontalLineToRelative(-2.0f)
+                verticalLineToRelative(-1.0f)
+                curveToRelative(0f, -0.55f, -0.45f, -1.0f, -1.0f, -1.0f)
+                reflectiveCurveToRelative(-1.0f, 0.45f, -1.0f, 1.0f)
+                verticalLineToRelative(1.0f)
+                horizontalLineTo(4.0f)
+                verticalLineTo(8.0f)
+                horizontalLineToRelative(16.0f)
+                verticalLineToRelative(4.0f)
+                close()
+            }
+        }.build().also { _Rounded_Radio = it }
+    }
+
+private var _Rounded_Pause: ImageVector? = null
+val Icons.Rounded.Pause: ImageVector
+    get() {
+        _Rounded_Pause?.let { return it }
+        return ImageVector.Builder(name = "Rounded.Pause", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f, autoMirror = false).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(8.0f, 19.0f)
+                curveToRelative(1.1f, 0f, 2.0f, -0.9f, 2.0f, -2.0f)
+                verticalLineTo(7.0f)
+                curveToRelative(0f, -1.1f, -0.9f, -2.0f, -2.0f, -2.0f)
+                reflectiveCurveToRelative(-2.0f, 0.9f, -2.0f, 2.0f)
+                verticalLineToRelative(10.0f)
+                curveToRelative(0f, 1.1f, 0.9f, 2.0f, 2.0f, 2.0f)
+                close()
+                moveTo(14.0f, 7.0f)
+                verticalLineToRelative(10.0f)
+                curveToRelative(0f, 1.1f, 0.9f, 2.0f, 2.0f, 2.0f)
+                reflectiveCurveToRelative(2.0f, -0.9f, 2.0f, -2.0f)
+                verticalLineTo(7.0f)
+                curveToRelative(0f, -1.1f, -0.9f, -2.0f, -2.0f, -2.0f)
+                reflectiveCurveToRelative(-2.0f, 0.9f, -2.0f, 2.0f)
+                close()
+            }
+        }.build().also { _Rounded_Pause = it }
+    }
+
+private var _Rounded_Newspaper: ImageVector? = null
+val Icons.Rounded.Newspaper: ImageVector
+    get() {
+        _Rounded_Newspaper?.let { return it }
+        return ImageVector.Builder(name = "Rounded.Newspaper", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f, autoMirror = false).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(21.15f, 3.85f)
+                lineToRelative(-0.82f, 0.82f)
+                lineToRelative(-0.95f, -0.96f)
+                curveToRelative(-0.39f, -0.39f, -1.02f, -0.39f, -1.42f, 0f)
+                lineTo(17.0f, 4.67f)
+                lineToRelative(-0.96f, -0.96f)
+                curveToRelative(-0.39f, -0.39f, -1.03f, -0.39f, -1.42f, 0f)
+                lineToRelative(-0.95f, 0.96f)
+                lineToRelative(-0.96f, -0.96f)
+                curveToRelative(-0.39f, -0.39f, -1.02f, -0.39f, -1.41f, 0f)
+                lineToRelative(-0.96f, 0.96f)
+                lineToRelative(-0.95f, -0.96f)
+                curveToRelative(-0.39f, -0.39f, -1.03f, -0.39f, -1.42f, 0f)
+                lineTo(7.0f, 4.67f)
+                lineToRelative(-0.96f, -0.96f)
+                curveToRelative(-0.39f, -0.39f, -1.03f, -0.39f, -1.42f, 0f)
+                lineTo(3.67f, 4.67f)
+                lineToRelative(-0.82f, -0.82f)
+                curveTo(2.53f, 3.53f, 2.0f, 3.76f, 2.0f, 4.2f)
+                verticalLineTo(19.0f)
+                curveToRelative(0f, 1.1f, 0.9f, 2.0f, 2.0f, 2.0f)
+                horizontalLineToRelative(16.0f)
+                curveToRelative(1.1f, 0f, 2.0f, -0.9f, 2.0f, -2.0f)
+                verticalLineTo(4.21f)
+                curveToRelative(0f, -0.45f, -0.54f, -0.67f, -0.85f, -0.36f)
+                close()
+                moveTo(11.0f, 19.0f)
+                horizontalLineTo(4.0f)
+                verticalLineToRelative(-6.0f)
+                horizontalLineToRelative(7.0f)
+                verticalLineToRelative(6.0f)
+                close()
+                moveTo(20.0f, 19.0f)
+                horizontalLineToRelative(-7.0f)
+                verticalLineToRelative(-2.0f)
+                horizontalLineToRelative(7.0f)
+                verticalLineToRelative(2.0f)
+                close()
+                moveTo(20.0f, 15.0f)
+                horizontalLineToRelative(-7.0f)
+                verticalLineToRelative(-2.0f)
+                horizontalLineToRelative(7.0f)
+                verticalLineToRelative(2.0f)
+                close()
+                moveTo(20.0f, 11.0f)
+                horizontalLineTo(4.0f)
+                verticalLineTo(8.0f)
+                horizontalLineToRelative(16.0f)
+                verticalLineToRelative(3.0f)
+                close()
+            }
+        }.build().also { _Rounded_Newspaper = it }
+    }

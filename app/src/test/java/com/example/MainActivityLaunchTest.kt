@@ -751,8 +751,8 @@ class HomeScreenTilesTest {
             HorizonLauncherTheme {
                 com.example.ui.components.LauncherWallpaperLayer(
                     settings = state.settings.copy(
-                        themePreset = com.example.model.ThemePreset.ALGERIA,
-                        wallpaperId = "sport_algeria",
+                        themePreset = com.example.model.ThemePreset.REAL_MADRID,
+                        wallpaperId = "sport_real_madrid",
                     )
                 )
                 com.example.ui.screens.ThemeAndWallpaperScreen(
@@ -766,12 +766,26 @@ class HomeScreenTilesTest {
         }
         composeRule.waitForIdle()
         val expectedIds = listOf(
+            "cosmos_blue", "aurora_emerald", "amber_twilight", "cobalt_crystal", "oled_minimal",
             "real_madrid", "barcelona", "man_city", "psg",
-            "brazil", "argentina", "france", "spain",
-            "egypt", "algeria", "saudi_arabia", "tunisia",
         )
         expectedIds.forEach { id ->
             composeRule.onNodeWithTag("theme_preset_$id").assertExists()
+        }
+        val removedIds = listOf(
+            "silver_earth", "coffee_gold", "zellige_royal", "pharaoh_gold",
+            "brazil", "argentina", "france", "spain",
+            "egypt", "algeria", "saudi_arabia", "tunisia",
+            "flag_algeria", "flag_egypt", "flag_saudi_arabia", "flag_france",
+            "flag_germany", "flag_spain", "flag_uk",
+            "cinema_classic", "cinema_scifi", "cinema_retro",
+            "anime_grendizer", "anime_remi", "anime_sandybell", "anime_dbz",
+        )
+        removedIds.forEach { id ->
+            assertTrue(
+                "Expected removed theme preset $id to be absent",
+                composeRule.onAllNodesWithTag("theme_preset_$id").fetchSemanticsNodes().isEmpty(),
+            )
         }
         com.example.model.ThemePreset.entries.filter { it.isSportsTheme }.forEach { preset ->
             val res = com.example.ui.components.wallpaperDrawableRes(preset.defaultWallpaperId)
@@ -1922,6 +1936,64 @@ class HomeScreenTilesTest {
         composeRule.onNodeWithTag("github_update_dialog").assertIsDisplayed()
         composeRule.onNodeWithTag("github_update_download_btn").assertIsDisplayed().performClick()
         assertTrue("Expected download & install CTA callback", downloadTriggered)
+
+        val pkg = "com.aistudio.horizonlauncher.qvxkpm"
+        assertEquals(
+            com.example.update.ApkValidationFailure.NOT_NEWER_THAN_INSTALLED,
+            (com.example.update.GitHubUpdateRepository.validateArchiveMetadata(
+                archivePackageName = pkg,
+                expectedPackageName = pkg,
+                archiveVersionCode = 16L,
+                archiveVersionName = "1.15",
+                expectedVersionTag = "v1.16",
+                currentVersionCode = 16L,
+                currentVersionName = "1.15",
+            ) as com.example.update.DownloadedApkValidation.Invalid).failure,
+        )
+        assertEquals(
+            com.example.update.ApkValidationFailure.RELEASE_ASSET_OUTDATED,
+            (com.example.update.GitHubUpdateRepository.validateArchiveMetadata(
+                archivePackageName = pkg,
+                expectedPackageName = pkg,
+                archiveVersionCode = 17L,
+                archiveVersionName = "1.16",
+                expectedVersionTag = "v1.17",
+                currentVersionCode = 16L,
+                currentVersionName = "1.15",
+            ) as com.example.update.DownloadedApkValidation.Invalid).failure,
+        )
+        assertEquals(
+            com.example.update.ApkValidationFailure.PACKAGE_MISMATCH,
+            (com.example.update.GitHubUpdateRepository.validateArchiveMetadata(
+                archivePackageName = "com.other.app",
+                expectedPackageName = pkg,
+                archiveVersionCode = 18L,
+                archiveVersionName = "1.17",
+                expectedVersionTag = "v1.17",
+                currentVersionCode = 16L,
+                currentVersionName = "1.15",
+            ) as com.example.update.DownloadedApkValidation.Invalid).failure,
+        )
+        assertTrue(
+            com.example.update.GitHubUpdateRepository.validateArchiveMetadata(
+                archivePackageName = pkg,
+                expectedPackageName = pkg,
+                archiveVersionCode = 18L,
+                archiveVersionName = "1.17",
+                expectedVersionTag = "v1.17",
+                currentVersionCode = 16L,
+                currentVersionName = "1.15",
+            ) is com.example.update.DownloadedApkValidation.Valid,
+        )
+    }
+
+    @Test
+    fun githubAutoUpdater_retryInstallOnResumeOnlyRunsWhenAwaitingPermission() {
+        val app = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()
+        val vm = com.example.ui.LauncherViewModel(app)
+        // Calling retryInstallDownloadedApk(onlyIfAwaitingPermission = true) in Idle or non-permission state must not crash or emit errors
+        vm.retryInstallDownloadedApk(onlyIfAwaitingPermission = true)
+        assertEquals(null, vm.uiState.value.statusMessage)
     }
 
     @Test
@@ -1980,153 +2052,4 @@ class HomeScreenTilesTest {
         composeRule.onNodeWithTag("home_prayer_card").assertIsDisplayed()
     }
 
-    @Test
-    fun newThemeCategories_flagsCinemaAndAnime_renderAndSelectCleanly() {
-        var appliedPreset: com.example.model.ThemePreset? = null
-        val state = LauncherUiState(
-            settings = LauncherSettings(
-                language = LauncherLanguage.AR,
-                themePreset = com.example.model.ThemePreset.FLAG_ALGERIA,
-                wallpaperId = "flag_algeria",
-            ),
-        )
-
-        composeRule.setContent {
-            HorizonLauncherTheme {
-                com.example.ui.components.LauncherWallpaperLayer(settings = state.settings)
-                com.example.ui.screens.ThemeAndWallpaperScreen(
-                    state = state,
-                    onBack = {},
-                    onUpdateSettings = {},
-                    onApplyThemePreset = { appliedPreset = it },
-                    onSelectCustomWallpaper = { _, _ -> },
-                )
-            }
-        }
-        composeRule.waitForIdle()
-
-        val expectedNewIds = listOf(
-            "flag_algeria", "flag_egypt", "flag_saudi_arabia", "flag_france",
-            "flag_germany", "flag_spain", "flag_uk",
-            "cinema_classic", "cinema_scifi", "cinema_retro",
-            "anime_grendizer", "anime_remi", "anime_sandybell", "anime_dbz",
-        )
-        expectedNewIds.forEach { id ->
-            composeRule.onNodeWithTag("theme_preset_$id").assertExists()
-        }
-
-        // Verify drawable-backed themes have valid drawables and procedural themes are registered
-        assertTrue(com.example.ui.components.wallpaperDrawableRes("cinema_classic") != null)
-        assertTrue(com.example.ui.components.wallpaperDrawableRes("anime_grendizer") != null)
-        assertTrue(com.example.ui.components.wallpaperDrawableRes("anime_remi") != null)
-        assertTrue(com.example.ui.components.wallpaperDrawableRes("anime_sandybell") != null)
-        assertTrue(com.example.ui.components.wallpaperDrawableRes("anime_dbz") != null)
-        assertTrue(com.example.ui.components.hasBuiltInArtworkWallpaper("flag_algeria"))
-        assertTrue(com.example.ui.components.hasBuiltInArtworkWallpaper("cinema_scifi"))
-
-        composeRule.onNodeWithTag("theme_preset_anime_grendizer")
-            .performScrollTo()
-            .performClick()
-        assertEquals(com.example.model.ThemePreset.ANIME_GRENDIZER, appliedPreset)
-    }
-
-    @Test
-    fun signatureSkins_selectCleanly_andPreserveExactHomeCardGeometry() {
-        val sampleApps = (1..6).map { idx ->
-            AppItem("com.test.skin$idx", "App $idx", "MainActivity", ColorDrawable(AndroidColor.CYAN))
-        }
-        val activePresetHolder = androidx.compose.runtime.mutableStateOf(com.example.model.ThemePreset.COSMOS_BLUE)
-        val showCustomizer = androidx.compose.runtime.mutableStateOf(false)
-
-        composeRule.setContent {
-            HorizonLauncherTheme {
-                val activeSettings = LauncherSettings(
-                    language = LauncherLanguage.FR,
-                    appsPerRow = 6,
-                    themePreset = activePresetHolder.value,
-                    accentColorHex = activePresetHolder.value.accentHex,
-                    wallpaperId = activePresetHolder.value.defaultWallpaperId,
-                )
-                if (showCustomizer.value) {
-                    com.example.ui.screens.ThemeAndWallpaperScreen(
-                        state = LauncherUiState(settings = activeSettings),
-                        onBack = {},
-                        onUpdateSettings = {},
-                        onApplyThemePreset = { activePresetHolder.value = it },
-                        onSelectCustomWallpaper = { _, _ -> },
-                    )
-                } else {
-                    HomeScreen(
-                        state = LauncherUiState(
-                            settings = activeSettings,
-                            destination = LauncherDestination.HOME,
-                            allApps = sampleApps,
-                            favoriteApps = sampleApps,
-                            visibleAppsOrdered = sampleApps,
-                            nextPrayer = NextPrayerInfo(PrayerKey.DHUHR, "12:26", 3, 36),
-                            weather = WeatherData("Mons Centre", 11.0, 9.0, 61, 14.0, 82, 13.0, 10.0, isDay = true, isGpsSynced = true),
-                        ),
-                        isHomeActive = true,
-                        onNavigate = {},
-                        onLaunchApp = {},
-                        onOpenContextApp = {},
-                        onToggleFavorite = {},
-                        onMoveFavorite = { _, _ -> },
-                        onHideApp = {},
-                        onOpenAppInfo = {},
-                        onOpenNetworkSettings = {},
-                        onExecuteGesture = {},
-                        onSelectHdmiSource = {},
-                        onStopAdhan = {},
-                    )
-                }
-            }
-        }
-
-        composeRule.waitForIdle()
-        val baselinePrayer = composeRule.onNodeWithTag("home_prayer_card").fetchSemanticsNode().boundsInRoot
-        val baselineWeather = composeRule.onNodeWithTag("home_weather_card").fetchSemanticsNode().boundsInRoot
-        val baselineClock = composeRule.onNodeWithTag("home_clock_header").fetchSemanticsNode().boundsInRoot
-        val baselineDock = composeRule.onNodeWithTag("home_favorites_dock").fetchSemanticsNode().boundsInRoot
-
-        val signatureThemes = listOf(
-            com.example.model.ThemePreset.SILVER_EARTH,
-            com.example.model.ThemePreset.COFFEE_GOLD,
-            com.example.model.ThemePreset.ZELLIGE_ROYAL,
-            com.example.model.ThemePreset.PHARAOH_GOLD,
-            com.example.model.ThemePreset.EGYPT,
-            com.example.model.ThemePreset.ALGERIA,
-            com.example.model.ThemePreset.MAN_CITY,
-            com.example.model.ThemePreset.BARCELONA,
-            com.example.model.ThemePreset.REAL_MADRID,
-        )
-
-        signatureThemes.forEach { preset ->
-            assertTrue(
-                "Expected valid wallpaper drawable for ${preset.id}",
-                com.example.ui.components.wallpaperDrawableRes(preset.defaultWallpaperId) != null,
-            )
-            activePresetHolder.value = preset
-            composeRule.waitForIdle()
-
-            val prayer = composeRule.onNodeWithTag("home_prayer_card").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-            val weather = composeRule.onNodeWithTag("home_weather_card").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-            val clock = composeRule.onNodeWithTag("home_clock_header").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-            val dock = composeRule.onNodeWithTag("home_favorites_dock").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-
-            assertEquals("Prayer bounds must remain identical for ${preset.id}", baselinePrayer, prayer)
-            assertEquals("Weather bounds must remain identical for ${preset.id}", baselineWeather, weather)
-            assertEquals("Clock bounds must remain identical for ${preset.id}", baselineClock, clock)
-            assertEquals("Dock bounds must remain identical for ${preset.id}", baselineDock, dock)
-        }
-
-        showCustomizer.value = true
-        composeRule.waitForIdle()
-        listOf("silver_earth", "coffee_gold", "zellige_royal", "pharaoh_gold").forEach { id ->
-            composeRule.onNodeWithTag("theme_preset_$id").assertExists()
-        }
-        composeRule.onNodeWithTag("theme_preset_zellige_royal").performClick()
-        composeRule.waitForIdle()
-        assertEquals(com.example.model.ThemePreset.ZELLIGE_ROYAL, activePresetHolder.value)
-    }
 }

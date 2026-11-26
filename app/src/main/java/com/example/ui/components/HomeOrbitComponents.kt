@@ -124,7 +124,7 @@ fun OrbitLanguageCycleButton(
     modifier: Modifier = Modifier,
     rimColor: Color = accent,
 ) {
-    val circleSize = if (isCompact) 36.dp else 42.dp
+    val circleSize = 48.dp
     TvFocusableSurface(
         onClick = onClick,
         accentColor = rimColor,
