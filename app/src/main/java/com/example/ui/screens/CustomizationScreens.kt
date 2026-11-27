@@ -38,7 +38,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.PlayArrow
 import com.example.ui.icons.AddPhotoAlternate
 import com.example.ui.icons.FolderOpen
 import com.example.ui.icons.Gesture
@@ -87,7 +86,6 @@ import com.example.model.LauncherLanguage
 import com.example.model.LauncherSettings
 import com.example.model.LauncherStrings
 import com.example.model.ThemeCategory
-import com.example.data.OnlineVideoWallpaperRepository
 import com.example.model.ThemePreset
 import com.example.ui.LauncherUiState
 import com.example.ui.components.GlassSegmentedSelector
@@ -107,16 +105,7 @@ private data class BuiltInWallpaper(
     val id: String,
     val title: String,
     val drawableRes: Int?,
-    val isVideo: Boolean = false,
-    val isOnline: Boolean = false,
 )
-
-private enum class WallpaperGalleryTab(val id: String) {
-    ALL("all"),
-    ONLINE_VIDEOS("online"),
-    BUILTIN_VIDEOS("builtin"),
-    THEMES_AND_STATIC("themes"),
-}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -132,7 +121,6 @@ fun ThemeAndWallpaperScreen(
     val settings = state.settings
     val strings = LauncherStrings.get(settings.language)
     val accent = settings.accentColor
-    var selectedTab by remember { mutableStateOf(WallpaperGalleryTab.ALL) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -178,73 +166,6 @@ fun ThemeAndWallpaperScreen(
             }
         }
     )
-
-    val videoWallpapers = remember(settings.language) {
-        listOf(
-            BuiltInWallpaper(
-                id = "video_earth_space",
-                title = when (settings.language) {
-                    LauncherLanguage.AR -> "الأرض من الفضاء"
-                    LauncherLanguage.FR -> "Terre depuis l'espace"
-                    LauncherLanguage.EN -> "Earth from Space"
-                },
-                drawableRes = R.drawable.thumb_video_earth_space,
-                isVideo = true,
-            ),
-            BuiltInWallpaper(
-                id = "video_emerald_nebula",
-                title = when (settings.language) {
-                    LauncherLanguage.AR -> "سديم زمردي متحرك"
-                    LauncherLanguage.FR -> "Nébuleuse Émeraude"
-                    LauncherLanguage.EN -> "Emerald Nebula"
-                },
-                drawableRes = R.drawable.thumb_video_emerald_nebula,
-                isVideo = true,
-            ),
-            BuiltInWallpaper(
-                id = "video_crimson_nebula",
-                title = when (settings.language) {
-                    LauncherLanguage.AR -> "سديم قرمزي متحرك"
-                    LauncherLanguage.FR -> "Nébuleuse Rubis"
-                    LauncherLanguage.EN -> "Ruby Nebula"
-                },
-                drawableRes = R.drawable.thumb_video_crimson_nebula,
-                isVideo = true,
-            ),
-            BuiltInWallpaper(
-                id = "video_cobalt_fractal",
-                title = when (settings.language) {
-                    LauncherLanguage.AR -> "موجات كوبالت متوهجة"
-                    LauncherLanguage.FR -> "Ondes Fractales Cobalt"
-                    LauncherLanguage.EN -> "Cobalt Light Waves"
-                },
-                drawableRes = R.drawable.thumb_video_cobalt_fractal,
-                isVideo = true,
-            ),
-            BuiltInWallpaper(
-                id = "video_violet_nebula",
-                title = when (settings.language) {
-                    LauncherLanguage.AR -> "فضاء بنفسجي متألق"
-                    LauncherLanguage.FR -> "Cosmos Violet"
-                    LauncherLanguage.EN -> "Violet Cosmos"
-                },
-                drawableRes = R.drawable.thumb_video_violet_nebula,
-                isVideo = true,
-            ),
-        )
-    }
-
-    val onlineNatureWallpapers = remember(settings.language) {
-        OnlineVideoWallpaperRepository.presets.map { spec ->
-            BuiltInWallpaper(
-                id = spec.id,
-                title = spec.localizedTitle(settings.language),
-                drawableRes = spec.posterResId,
-                isVideo = true,
-                isOnline = true,
-            )
-        }
-    }
 
     // Only wallpapers that are NOT already represented by a ThemePreset card above (no duplicates)
     val exclusiveStaticWallpapers = remember(settings.language) {
@@ -320,97 +241,13 @@ fun ThemeAndWallpaperScreen(
                 Text(strings.themeAndWallpaperTitle, style = MaterialTheme.typography.headlineLarge, color = PureWhite)
             }
 
-            GlassSegmentedSelector(
-                options = WallpaperGalleryTab.entries,
-                selected = selectedTab,
-                labelProvider = { tab ->
-                    when (tab) {
-                        WallpaperGalleryTab.ALL -> strings.wallpaperFilterAll
-                        WallpaperGalleryTab.ONLINE_VIDEOS -> strings.wallpaperFilterOnline
-                        WallpaperGalleryTab.BUILTIN_VIDEOS -> strings.wallpaperFilterBuiltInVideo
-                        WallpaperGalleryTab.THEMES_AND_STATIC -> strings.wallpaperFilterThemesStatic
-                    }
-                },
-                accentColor = accent,
-                onSelect = { selectedTab = it },
-                testTagPrefix = "wallpaper_filter",
-                tagSuffixProvider = { it.id },
-            )
-
-            if (selectedTab == WallpaperGalleryTab.ALL || selectedTab == WallpaperGalleryTab.ONLINE_VIDEOS) {
-                Text(
-                    text = strings.onlineNatureVideoWallpapersSection,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = accent,
-                    modifier = Modifier.padding(top = 4.dp),
+            // 1. Categorized Theme Presets (Classic + Sports Clubs)
+            val themeGroups = remember(strings) {
+                listOf(
+                    strings.themeCategoryClassic to ThemePreset.entries.filter { it.category == ThemeCategory.CLASSIC },
+                    strings.themeCategoryClubs to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_CLUBS },
                 )
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    onlineNatureWallpapers.forEach { wp ->
-                        BuiltInWallpaperCard(
-                            wp = wp,
-                            selected = settings.customWallpaperUri == null && settings.wallpaperId == wp.id,
-                            surfaceHex = settings.themePreset.surfaceHex,
-                            accent = accent,
-                            onlineBadgeLabel = strings.onlineBadgeLabel,
-                            onSelect = {
-                                onUpdateSettings {
-                                    it.copy(
-                                        wallpaperId = wp.id,
-                                        customWallpaperUri = null,
-                                        customWallpaperIsVideo = false,
-                                    )
-                                }
-                            },
-                        )
-                    }
-                }
             }
-
-            if (selectedTab == WallpaperGalleryTab.ALL || selectedTab == WallpaperGalleryTab.BUILTIN_VIDEOS) {
-                Text(
-                    text = strings.animatedVideoWallpapersSection,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = accent,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    videoWallpapers.forEach { wp ->
-                        BuiltInWallpaperCard(
-                            wp = wp,
-                            selected = settings.customWallpaperUri == null && settings.wallpaperId == wp.id,
-                            surfaceHex = settings.themePreset.surfaceHex,
-                            accent = accent,
-                            onlineBadgeLabel = strings.onlineBadgeLabel,
-                            onSelect = {
-                                onUpdateSettings {
-                                    it.copy(
-                                        wallpaperId = wp.id,
-                                        customWallpaperUri = null,
-                                        customWallpaperIsVideo = false,
-                                    )
-                                }
-                            },
-                        )
-                    }
-                }
-            }
-
-            if (selectedTab == WallpaperGalleryTab.ALL || selectedTab == WallpaperGalleryTab.THEMES_AND_STATIC) {
-                // 1. Categorized Theme Presets (Classic + Sports Clubs)
-                val themeGroups = remember(strings) {
-                    listOf(
-                        strings.themeCategoryClassic to ThemePreset.entries.filter { it.category == ThemeCategory.CLASSIC },
-                        strings.themeCategoryClubs to ThemePreset.entries.filter { it.category == ThemeCategory.SPORTS_CLUBS },
-                    )
-                }
             themeGroups.forEach { (categoryTitle, presets) ->
                 Text(
                     text = categoryTitle,
@@ -705,7 +542,6 @@ fun ThemeAndWallpaperScreen(
                         selected = settings.customWallpaperUri == null && settings.wallpaperId == wp.id,
                         surfaceHex = settings.themePreset.surfaceHex,
                         accent = accent,
-                        onlineBadgeLabel = strings.onlineBadgeLabel,
                         onSelect = {
                             onUpdateSettings {
                                 it.copy(
@@ -717,7 +553,6 @@ fun ThemeAndWallpaperScreen(
                         },
                     )
                 }
-            }
             }
 
             // Wallpaper Dimming
@@ -1083,7 +918,6 @@ private fun BuiltInWallpaperCard(
     selected: Boolean,
     surfaceHex: Long,
     accent: Color,
-    onlineBadgeLabel: String,
     onSelect: () -> Unit,
 ) {
     TvFocusableSurface(
@@ -1129,32 +963,6 @@ private fun BuiltInWallpaperCard(
                     )
                     .padding(12.dp),
             ) {
-                if (wp.isVideo) {
-                    Surface(
-                        shape = RoundedCornerShape(999.dp),
-                        color = Color.Black.copy(alpha = 0.62f),
-                        border = BorderStroke(1.dp, accent.copy(alpha = 0.72f)),
-                        modifier = Modifier.align(Alignment.TopStart),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(3.dp),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.PlayArrow,
-                                contentDescription = null,
-                                tint = accent,
-                                modifier = Modifier.size(14.dp),
-                            )
-                            Text(
-                                text = if (wp.isOnline) "$onlineBadgeLabel · VIDEO" else "VIDEO",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = PureWhite,
-                            )
-                        }
-                    }
-                }
                 Text(
                     text = wp.title,
                     style = MaterialTheme.typography.labelLarge,

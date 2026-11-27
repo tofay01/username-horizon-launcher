@@ -424,11 +424,6 @@ fun LauncherSettingsScreen(
                     com.example.model.LauncherLanguage.FR -> "Photo"
                     com.example.model.LauncherLanguage.EN -> "Photo"
                 }
-                com.example.ui.components.isBuiltInVideoWallpaper(settings.wallpaperId) -> when (settings.language) {
-                    com.example.model.LauncherLanguage.AR -> "فيديو"
-                    com.example.model.LauncherLanguage.FR -> "Vidéo"
-                    com.example.model.LauncherLanguage.EN -> "Video"
-                }
                 else -> null
             }
             GlassSettingCardRow(

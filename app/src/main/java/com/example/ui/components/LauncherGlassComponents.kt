@@ -19,11 +19,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.DefaultDataSource
-import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -77,7 +73,6 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -123,7 +118,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.R
-import com.example.data.OnlineVideoWallpaperRepository
 import com.example.model.AppIconShape
 import com.example.model.AppIconSize
 import com.example.model.AppItem
@@ -149,60 +143,19 @@ fun wallpaperDrawableRes(wallpaperId: String): Int? = when (wallpaperId) {
     "sport_psg" -> R.drawable.img_sport_psg
     "sport_brazil_light" -> R.drawable.img_sport_brazil_light
     "sport_algeria_fennecs" -> R.drawable.img_sport_algeria_fennecs
-    "video_earth_space" -> R.drawable.thumb_video_earth_space
-    "video_emerald_nebula" -> R.drawable.thumb_video_emerald_nebula
-    "video_crimson_nebula" -> R.drawable.thumb_video_crimson_nebula
-    "video_cobalt_fractal" -> R.drawable.thumb_video_cobalt_fractal
-    "video_violet_nebula" -> R.drawable.thumb_video_violet_nebula
-    else -> OnlineVideoWallpaperRepository.posterDrawableRes(wallpaperId)
-}
-
-fun wallpaperVideoRawRes(wallpaperId: String): Int? = when (wallpaperId) {
-    "video_earth_space" -> R.raw.vid_wallpaper_earth_space
-    "video_emerald_nebula" -> R.raw.vid_wallpaper_emerald_nebula
-    "video_crimson_nebula" -> R.raw.vid_wallpaper_crimson_nebula
-    "video_cobalt_fractal" -> R.raw.vid_wallpaper_cobalt_fractal
-    "video_violet_nebula" -> R.raw.vid_wallpaper_violet_nebula
     else -> null
 }
-
-fun isBuiltInVideoWallpaper(wallpaperId: String): Boolean =
-    wallpaperVideoRawRes(wallpaperId) != null || OnlineVideoWallpaperRepository.isOnlineVideoWallpaper(wallpaperId)
 
 @Composable
 fun LauncherWallpaperLayer(
     settings: LauncherSettings,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
     val customUri = settings.customWallpaperUri
-    val isOnlinePreset = customUri.isNullOrBlank() &&
-        OnlineVideoWallpaperRepository.isOnlineVideoWallpaper(settings.wallpaperId)
-    val resolvedOnlineUri by produceState<String?>(
-        initialValue = if (isOnlinePreset) {
-            OnlineVideoWallpaperRepository.immediateUriIfCached(context, settings.wallpaperId)
-        } else {
-            null
-        },
-        key1 = settings.wallpaperId,
-        key2 = isOnlinePreset,
-    ) {
-        if (!isOnlinePreset) {
-            value = null
-            return@produceState
-        }
-        val uri = OnlineVideoWallpaperRepository.resolvePlayableUri(context, settings.wallpaperId)
-        value = uri
-        if (uri != null && (uri.startsWith("http://") || uri.startsWith("https://"))) {
-            OnlineVideoWallpaperRepository.cacheStreamInBackground(context, settings.wallpaperId, uri)
-        }
-    }
-    val builtInVideoRawRes = if (customUri.isNullOrBlank()) wallpaperVideoRawRes(settings.wallpaperId) else null
-    val activeVideoUri: String? = when {
-        !customUri.isNullOrBlank() && settings.customWallpaperIsVideo -> customUri
-        builtInVideoRawRes != null -> "android.resource://${context.packageName}/$builtInVideoRawRes"
-        !resolvedOnlineUri.isNullOrBlank() -> resolvedOnlineUri
-        else -> null
+    val activeVideoUri: String? = if (!customUri.isNullOrBlank() && settings.customWallpaperIsVideo) {
+        customUri
+    } else {
+        null
     }
 
     Box(modifier = modifier.fillMaxSize().background(DeepSpaceBlack)) {
@@ -263,7 +216,6 @@ fun LauncherWallpaperLayer(
     }
 }
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 private fun LoopingVideoWallpaper(
     uriString: String,
@@ -295,18 +247,11 @@ private fun LoopingVideoWallpaper(
 
     val exoPlayer = remember(context) {
         runCatching {
-            val httpFactory = DefaultHttpDataSource.Factory()
-                .setUserAgent(OnlineVideoWallpaperRepository.USER_AGENT)
-                .setAllowCrossProtocolRedirects(true)
-                .setConnectTimeoutMs(12_000)
-                .setReadTimeoutMs(15_000)
-            val dataSourceFactory = DefaultDataSource.Factory(context, httpFactory)
             val attrs = AudioAttributes.Builder()
                 .setUsage(C.USAGE_MEDIA)
                 .setContentType(C.CONTENT_TYPE_MOVIE)
                 .build()
             ExoPlayer.Builder(context)
-                .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
                 .build()
                 .apply {
                     setAudioAttributes(attrs, false)
