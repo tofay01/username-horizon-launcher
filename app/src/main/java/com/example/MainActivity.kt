@@ -412,6 +412,13 @@ fun HorizonLauncherRoot(
                                 viewModel.openSystemSettings()
                             }
                         },
+                        onUninstallOldVersion = {
+                            runCatching {
+                                context.startActivity(viewModel.getUninstallSelfIntent())
+                            }.onFailure {
+                                viewModel.openSystemSettings()
+                            }
+                        },
                         onDismiss = viewModel::dismissUpdateDialog,
                     )
                 }

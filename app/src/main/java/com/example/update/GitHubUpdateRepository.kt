@@ -78,6 +78,10 @@ sealed interface AppUpdateUiState {
         val apkFilePath: String,
         val needsInstallPermission: Boolean,
     ) : AppUpdateUiState
+    data class SignatureMismatch(
+        val info: AppUpdateInfo,
+        val apkFilePath: String,
+    ) : AppUpdateUiState
 }
 
 enum class ApkValidationFailure {
@@ -85,6 +89,7 @@ enum class ApkValidationFailure {
     PACKAGE_MISMATCH,
     NOT_NEWER_THAN_INSTALLED,
     RELEASE_ASSET_OUTDATED,
+    SIGNATURE_MISMATCH,
 }
 
 sealed interface DownloadedApkValidation {
@@ -274,6 +279,7 @@ class GitHubUpdateRepository(private val context: Context) {
         } else {
             pkgInfo.versionCode.toLong()
         }
+        val signaturesMatch = hasMatchingSigningCertificate(apkFile.absolutePath)
         return validateArchiveMetadata(
             archivePackageName = pkgInfo.packageName,
             expectedPackageName = context.packageName,
@@ -282,7 +288,72 @@ class GitHubUpdateRepository(private val context: Context) {
             expectedVersionTag = expectedVersionTag,
             currentVersionCode = currentVersionCode,
             currentVersionName = currentVersionName,
+            signaturesMatch = signaturesMatch,
         )
+    }
+
+    @Suppress("DEPRECATION")
+    fun hasMatchingSigningCertificate(apkFilePath: String): Boolean {
+        return runCatching {
+            val installedCerts = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val info = context.packageManager.getPackageInfo(
+                    context.packageName,
+                    PackageManager.GET_SIGNING_CERTIFICATES,
+                )
+                extractSigningBytes(info)
+            } else {
+                val info = context.packageManager.getPackageInfo(
+                    context.packageName,
+                    PackageManager.GET_SIGNATURES,
+                )
+                extractSigningBytes(info)
+            }
+            val archiveCerts = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val info = context.packageManager.getPackageArchiveInfo(
+                    apkFilePath,
+                    PackageManager.GET_SIGNING_CERTIFICATES,
+                )
+                info?.let { extractSigningBytes(it) }.orEmpty()
+            } else {
+                val info = context.packageManager.getPackageArchiveInfo(
+                    apkFilePath,
+                    PackageManager.GET_SIGNATURES,
+                )
+                info?.let { extractSigningBytes(it) }.orEmpty()
+            }
+            if (installedCerts.isEmpty() || archiveCerts.isEmpty()) {
+                true
+            } else {
+                installedCerts.any { installed -> archiveCerts.any { archive -> installed.contentEquals(archive) } }
+            }
+        }.getOrDefault(true)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun extractSigningBytes(pkgInfo: android.content.pm.PackageInfo): List<ByteArray> {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val signingInfo = pkgInfo.signingInfo
+            if (signingInfo != null) {
+                val signers = if (signingInfo.hasMultipleSigners()) {
+                    signingInfo.apkContentsSigners
+                } else {
+                    signingInfo.signingCertificateHistory
+                }
+                if (!signers.isNullOrEmpty()) {
+                    return signers.map { it.toByteArray() }
+                }
+            }
+        }
+        return pkgInfo.signatures?.map { it.toByteArray() }.orEmpty()
+    }
+
+    fun createUninstallSelfIntent(): Intent {
+        return Intent(
+            Intent.ACTION_DELETE,
+            Uri.parse("package:${context.packageName}"),
+        ).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
     }
 
     fun launchApkInstaller(apkFilePath: String): Boolean {
@@ -313,10 +384,18 @@ class GitHubUpdateRepository(private val context: Context) {
             expectedVersionTag: String,
             currentVersionCode: Long,
             currentVersionName: String,
+            signaturesMatch: Boolean = true,
         ): DownloadedApkValidation {
             if (archivePackageName != expectedPackageName) {
                 return DownloadedApkValidation.Invalid(
                     failure = ApkValidationFailure.PACKAGE_MISMATCH,
+                    archiveVersionName = archiveVersionName.takeIf { it.isNotBlank() },
+                    archiveVersionCode = archiveVersionCode,
+                )
+            }
+            if (!signaturesMatch) {
+                return DownloadedApkValidation.Invalid(
+                    failure = ApkValidationFailure.SIGNATURE_MISMATCH,
                     archiveVersionName = archiveVersionName.takeIf { it.isNotBlank() },
                     archiveVersionCode = archiveVersionCode,
                 )

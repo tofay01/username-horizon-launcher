@@ -1967,6 +1967,19 @@ class HomeScreenTilesTest {
                 currentVersionName = "1.15",
             ) as com.example.update.DownloadedApkValidation.Invalid).failure,
         )
+        assertEquals(
+            com.example.update.ApkValidationFailure.SIGNATURE_MISMATCH,
+            (com.example.update.GitHubUpdateRepository.validateArchiveMetadata(
+                archivePackageName = pkg,
+                expectedPackageName = pkg,
+                archiveVersionCode = 18L,
+                archiveVersionName = "1.17",
+                expectedVersionTag = "v1.17",
+                currentVersionCode = 16L,
+                currentVersionName = "1.15",
+                signaturesMatch = false,
+            ) as com.example.update.DownloadedApkValidation.Invalid).failure,
+        )
         assertTrue(
             com.example.update.GitHubUpdateRepository.validateArchiveMetadata(
                 archivePackageName = pkg,
@@ -1978,6 +1991,21 @@ class HomeScreenTilesTest {
                 currentVersionName = "1.15",
             ) is com.example.update.DownloadedApkValidation.Valid,
         )
+
+        updateStateHolder.value = com.example.update.AppUpdateUiState.SignatureMismatch(
+            info = com.example.update.AppUpdateInfo(
+                versionTag = "v1.21",
+                releaseTitle = "Horizon 1.21",
+                releaseNotes = "",
+                htmlUrl = "https://github.com/esiptv/HorizonLauncher/releases/tag/v1.21",
+                apkDownloadUrl = "https://github.com/esiptv/HorizonLauncher/releases/download/v1.21/HorizonLauncher_v1.21.apk",
+                apkFileName = "HorizonLauncher_v1.21.apk",
+                apkSizeBytes = 20_000_000L,
+            ),
+            apkFilePath = "/tmp/test.apk",
+        )
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("github_update_uninstall_btn").assertIsDisplayed()
     }
 
     @Test

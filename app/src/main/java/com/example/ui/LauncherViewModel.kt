@@ -158,6 +158,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     private var lastLoadedLocationKey: String? = null
     private var lastNewsFetchKey: String? = null
+    private var dismissedUpdateTagInSession: String? = null
     private var hasAutoCheckedUpdates = false
     private var radioLoadJob: kotlinx.coroutines.Job? = null
     private var newsLoadJob: kotlinx.coroutines.Job? = null
@@ -1158,7 +1159,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         safeLaunch {
             when (val res = updateRepo.checkLatestRelease(repoSlug, com.example.BuildConfig.VERSION_NAME)) {
                 is UpdateCheckResult.UpdateAvailable -> {
-                    updateStateFlow.value = AppUpdateUiState.Available(res.info)
+                    if (!silent || res.info.versionTag != dismissedUpdateTagInSession) {
+                        updateStateFlow.value = AppUpdateUiState.Available(res.info)
+                    }
                 }
                 is UpdateCheckResult.UpToDate -> {
                     if (!silent) {
@@ -1213,20 +1216,29 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             result.onSuccess { file ->
                 when (val validation = updateRepo.validateDownloadedApk(file, info.versionTag)) {
                     is DownloadedApkValidation.Invalid -> {
-                        runCatching { file.delete() }
-                        updateStateFlow.value = AppUpdateUiState.Idle
-                        val detail = when (validation.failure) {
-                            ApkValidationFailure.NOT_NEWER_THAN_INSTALLED,
-                            ApkValidationFailure.RELEASE_ASSET_OUTDATED -> {
-                                val actual = validation.archiveVersionName?.let { "v$it" } ?: "?"
-                                "${strings.updateStaleApkStatus} ($actual → ${info.versionTag})"
+                        if (validation.failure == ApkValidationFailure.SIGNATURE_MISMATCH) {
+                            updateStateFlow.value = AppUpdateUiState.SignatureMismatch(
+                                info = info,
+                                apkFilePath = file.absolutePath,
+                            )
+                        } else {
+                            runCatching { file.delete() }
+                            updateStateFlow.value = AppUpdateUiState.Idle
+                            val detail = when (validation.failure) {
+                                ApkValidationFailure.NOT_NEWER_THAN_INSTALLED,
+                                ApkValidationFailure.RELEASE_ASSET_OUTDATED -> {
+                                    val actual = validation.archiveVersionName?.let { "v$it" } ?: "?"
+                                    "${strings.updateStaleApkStatus} ($actual → ${info.versionTag})"
+                                }
+                                ApkValidationFailure.PACKAGE_MISMATCH ->
+                                    "${strings.updateErrorStatus} (Package mismatch)"
+                                ApkValidationFailure.CORRUPT_ARCHIVE ->
+                                    "${strings.updateErrorStatus} (Invalid APK)"
+                                ApkValidationFailure.SIGNATURE_MISMATCH ->
+                                    strings.updateSignatureMismatchDesc
                             }
-                            ApkValidationFailure.PACKAGE_MISMATCH ->
-                                "${strings.updateErrorStatus} (Package mismatch)"
-                            ApkValidationFailure.CORRUPT_ARCHIVE ->
-                                "${strings.updateErrorStatus} (Invalid APK)"
+                            showStatus(detail)
                         }
-                        showStatus(detail)
                     }
                     is DownloadedApkValidation.Valid -> {
                         val canInstall = updateRepo.canInstallPackages()
@@ -1270,7 +1282,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun getUnknownSourcesSettingsIntent(): Intent = updateRepo.createUnknownSourcesSettingsIntent()
 
+    fun getUninstallSelfIntent(): Intent = updateRepo.createUninstallSelfIntent()
+
     fun dismissUpdateDialog() {
+        val currentTag = when (val s = updateStateFlow.value) {
+            is AppUpdateUiState.Available -> s.info.versionTag
+            is AppUpdateUiState.ReadyToInstall -> s.info.versionTag
+            is AppUpdateUiState.SignatureMismatch -> s.info.versionTag
+            else -> null
+        }
+        if (!currentTag.isNullOrBlank()) {
+            dismissedUpdateTagInSession = currentTag
+        }
         updateStateFlow.value = AppUpdateUiState.Idle
     }
 

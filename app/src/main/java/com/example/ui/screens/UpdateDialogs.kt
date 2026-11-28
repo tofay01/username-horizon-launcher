@@ -61,6 +61,7 @@ fun GitHubUpdateDialogHost(
     onDownloadAndInstall: () -> Unit,
     onRetryInstall: () -> Unit,
     onRequestInstallPermission: () -> Unit,
+    onUninstallOldVersion: () -> Unit = {},
     onDismiss: () -> Unit,
 ) {
     when (updateState) {
@@ -79,11 +80,13 @@ fun GitHubUpdateDialogHost(
 
         is AppUpdateUiState.Available,
         is AppUpdateUiState.Downloading,
-        is AppUpdateUiState.ReadyToInstall -> {
+        is AppUpdateUiState.ReadyToInstall,
+        is AppUpdateUiState.SignatureMismatch -> {
             val info = when (updateState) {
                 is AppUpdateUiState.Available -> updateState.info
                 is AppUpdateUiState.Downloading -> updateState.info
                 is AppUpdateUiState.ReadyToInstall -> updateState.info
+                is AppUpdateUiState.SignatureMismatch -> updateState.info
                 else -> return
             }
             val primaryFocusRequester = remember { FocusRequester() }
@@ -225,6 +228,32 @@ fun GitHubUpdateDialogHost(
                                     }
                                 }
 
+                                is AppUpdateUiState.SignatureMismatch -> {
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = Color(0x33F43F5E),
+                                        border = BorderStroke(1.dp, Color(0xFFF43F5E)),
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            modifier = Modifier.padding(10.dp),
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Info,
+                                                contentDescription = null,
+                                                tint = Color(0xFFF43F5E),
+                                                modifier = Modifier.size(20.dp),
+                                            )
+                                            Text(
+                                                text = strings.updateSignatureMismatchDesc,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = PureWhite,
+                                            )
+                                        }
+                                    }
+                                }
+
                                 else -> Unit
                             }
                         }
@@ -290,6 +319,26 @@ fun GitHubUpdateDialogHost(
                                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                                         )
                                     }
+                                }
+                            }
+
+                            is AppUpdateUiState.SignatureMismatch -> {
+                                TvFocusableSurface(
+                                    onClick = onUninstallOldVersion,
+                                    accentColor = Color(0xFFF43F5E),
+                                    shape = RoundedCornerShape(12.dp),
+                                    baseColor = Color(0x33F43F5E),
+                                    focusedColor = Color(0x66F43F5E),
+                                    isSelected = true,
+                                    focusRequester = primaryFocusRequester,
+                                    modifier = Modifier.testTag("github_update_uninstall_btn"),
+                                ) {
+                                    Text(
+                                        text = strings.updateUninstallOldBtn,
+                                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                                        color = PureWhite,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                    )
                                 }
                             }
 
