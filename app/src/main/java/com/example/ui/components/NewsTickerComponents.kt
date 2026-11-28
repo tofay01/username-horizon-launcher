@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -25,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.SpanStyle
@@ -217,14 +220,19 @@ fun TvNewsTickerBar(
     }
 
     if (interactive) {
-        TvFocusableSurface(
-            onClick = onClick,
-            accentColor = accent,
+        val clickInteractionSource = remember { MutableInteractionSource() }
+        Surface(
             shape = RoundedCornerShape(12.dp),
-            baseColor = effectiveBg,
-            focusedColor = effectiveBg,
-            baseBorderColor = borderCol,
-            modifier = modifier.height(barHeight),
+            color = effectiveBg,
+            border = BorderStroke(1.dp, borderCol),
+            modifier = modifier
+                .height(barHeight)
+                .focusProperties { canFocus = false }
+                .clickable(
+                    interactionSource = clickInteractionSource,
+                    indication = null,
+                    onClick = onClick,
+                ),
         ) {
             innerContent()
         }

@@ -3,14 +3,20 @@ package com.example
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.ColorDrawable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.requestFocus
 import com.example.data.NewsTickerRepository
 import com.example.model.AppItem
 import com.example.model.LauncherDestination
@@ -118,6 +124,7 @@ class NewsTickerFeatureTest {
         assertEquals(NewsCategory.WORLD, interleaved[2].category)
     }
 
+    @OptIn(ExperimentalTestApi::class)
     @Test
     fun homeScreen_newsTickerSitsBelowFavoritesDockWithoutAlteringDockSize_andOpensReader() {
         val sampleApps = listOf(
@@ -204,6 +211,13 @@ class NewsTickerFeatureTest {
             "Expected news ticker (${tickerBounds.bottom}) to fit cleanly inside viewport (${rootBounds.bottom})",
             tickerBounds.bottom <= rootBounds.bottom + 2f,
         )
+
+        // D-Pad Down from Favorites Dock must never move focus to the news ticker bar
+        composeRule.onNodeWithTag("app_tile_com.test.yt").requestFocus()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("app_tile_com.test.yt").performKeyInput { pressKey(Key.DirectionDown) }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("home_news_ticker_bar").assertIsNotFocused()
 
         // Click ticker -> opens reader dialog -> filter by Sports -> inspect article -> customize style
         composeRule.onNodeWithTag("home_news_ticker_bar").performClick()
